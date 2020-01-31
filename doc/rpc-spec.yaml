@@ -1,0 +1,934 @@
+openapi: 3.0.1
+info:
+  title: Pocket Network
+  description: This is the API definition Pocket Network core RPC calls.
+  termsOfService: https://pokt.network/terms/
+  contact:
+    email: hola@pokt.network
+  license:
+    name: MIT
+    url: https://github.com/pokt-network/pocket-core/LICENSE.md
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Pocket Network
+  url: https://pokt.network
+servers:
+- url: https://dispatch.pokt.network/v1
+- url: http://dispatch.pokt.network/v1
+tags:
+- name: version
+  description: Version of the Pocket API
+- name: client
+  description: Dispatch and relay services
+- name: query
+  description: Blockchain queries
+paths:
+  /:
+    get:
+      tags:
+      - version
+      summary: Get the current version of the Pocket Network API
+      responses:
+        200:
+          description: Version
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "1.0.0"
+  /client/dispatch:
+    post:
+      tags:
+      - client
+      requestBody:
+        description: Request to be relayed to dispatch
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryDispatchRequest'
+      responses:
+        200:
+          description: A list of dispatch/service nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryDispatchResponse'
+  /client/relay:
+    post:
+      tags:
+      - client
+      requestBody:
+        description: Request to be relayed to a target blockchain
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRelayRequest'
+      responses:
+        200:
+          description: Response from the relayed request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryRelayResponse'
+  /query/app:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Description of a specific app at a blockheight
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAddressHeight'
+            example:
+              staking_status: "staked"
+              height: 2351900
+        required: true
+      responses:
+        200:
+          description: Node proofs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        400:
+          description: Failed to retrieve the applications
+  /query/appparams:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Details of application parameters at a specific height
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryHeight'
+            example:
+              height: 623211
+        required: true
+      responses:
+        200:
+          description: Application parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationParams'
+        400:
+          description: Failed to retrieve the application information
+  /query/apps:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Description of all apps at a blockheight
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryStakingHeight'
+            example:
+              staking_status: "staked"
+              height: 2351900
+        required: true
+      responses:
+        200:
+          description: Node proofs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Applications'
+        400:
+          description: Failed to retrieve the applications
+  /query/balance:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Current balance of the address
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAddressHeight'
+            example:
+              address: "0xA5DE6D4184016708c1040c355F1c958192276DB5"
+        required: true
+      responses:
+        200:
+          description: Block height
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryBalanceResponse'
+              example:
+                balance: 149973957302365
+        400:
+          description: Failed to retrieve the block height information
+  /query/block:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Block number to fetch
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryBlock'
+            example:
+              height: "4215012"
+        required: true
+      responses:
+        200:
+          description: Block data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryBlockResponse'
+        400:
+          description: Failed to retrieve the block information
+  /query/height:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Current block height
+        content:
+          application/json:
+            schema:
+              {}
+        required: false
+      responses:
+        200:
+          description: Block height
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryHeightResponse'
+              example:
+                height: 251260
+        400:
+          description: Failed to retrieve the block height information
+  /query/node:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Details of a specific node
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAddressHeight'
+            example:
+              address: "0xA5DE6D4184016708c1040c355F1c958192276DB5"
+        required: true
+      responses:
+        200:
+          description: Node details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        400:
+          description: Failed to retrieve the node information
+  /query/nodeparams:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Details of node parameters at a specific height
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryHeight'
+            example:
+              height: 623211
+        required: true
+      responses:
+        200:
+          description: Node parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeParams'
+        400:
+          description: Failed to retrieve the node information
+  /query/nodeproof:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Node proof from a specific node
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryNodeProof'
+        required: true
+      responses:
+        200:
+          description: Node proofs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoredProof'
+        400:
+          description: Failed to retrieve the node proof information
+  /query/nodeproofs:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Node proofs from a specific blockchain height
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAddressHeight'
+            example:
+              address: "0xA5DE6D4184016708c1040c355F1c958192276DB5"
+              height: 35161
+        required: true
+      responses:
+        200:
+          description: Node proofs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryNodeProofsResponse'
+        400:
+          description: Failed to retrieve the node proof information
+  /query/nodes:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Status of the connected nodes
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryStakingHeight'
+            example:
+              staking_status: "staked"
+              height: 2351900
+        required: true
+      responses:
+        200:
+          description: Block height
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryNodesResponse'
+        400:
+          description: Failed to retrieve the nodes' information
+  /query/pocketparams:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Details of Pocket Network parameters at a specific height
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryHeight'
+            example:
+              height: 623211
+        required: true
+      responses:
+        200:
+          description: Pocket Network parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PocketParams'
+        400:
+          description: Failed to retrieve the application information
+  /query/supply:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Details of Pocket Network parameters at a specific height
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryHeight'
+            example:
+              height: 623211
+        required: true
+      responses:
+        200:
+          description: Pocket Network parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuerySupplyResponse'
+        400:
+          description: Failed to retrieve the supply information
+  /query/supportedchains:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Details of Pocket Network parameters at a specific height
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryHeight'
+            example:
+              height: 623211
+        required: true
+      responses:
+        200:
+          description: Pocket Network parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuerySupportedChainsResponse'
+        400:
+          description: Failed to retrieve the application information
+  /query/tx:
+    post:
+      tags:
+      - query
+      requestBody:
+        description: Block number to fetch
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryTX'
+            example:
+              hash: "0x197e4d46009879f28f978a90627c7dfeab64b4777afcc24e2b9c3d72b4dada22"
+        required: true
+      responses:
+        200:
+          description: Transaction data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryTXResponse'
+        400:
+          description: Failed to retrieve the transaction information
+components:
+  schemas:
+    Application:
+      type: object
+      properties:
+        address:
+          type: string
+          description: The hex address of the application
+        cons_pubkey:
+          type: string
+          description: The hex consensus public key of the application
+        jailed:
+          type: boolean
+          description: Has the application been jailed from staked status
+          default: false
+        status:
+          type: string
+          description: Application status
+        staked_tokens:
+          type: string
+          description: How many tokens has this node staked
+        chains:
+          type: array
+          items:
+            type: string
+          description: Blockchains supported
+        max_relays:
+          type: integer
+          format: int64
+          description: Maximum number of relays supported
+        unstaking_completion_time:
+          type: string
+          description: If unstaking, the minimum time for the validator to complete unstaking
+    ApplicationParams:
+      type: object
+      properties:
+        name:
+          type: string
+          description: here
+    Applications:
+      type: array
+      items:
+        $ref: "#/components/schemas/Application"
+    Block:
+      type: object
+      properties:
+        header:
+          $ref: '#/components/schemas/BlockHeader'
+        data:
+          type: string
+          description: Data hash of the block
+        evidence:
+          type: string
+          description: Evidence hash
+        lastCommit:
+          $ref: '#/components/schemas/Commit'
+    Blockchain:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the blockchain
+        net_id:
+          type: string
+          description: Network identifier
+    BlockHeader:
+      type: object
+      properties:
+        version:
+          $ref: '#/components/schemas/Consensus'
+        chain_id:
+          type: string
+        height:
+          type: integer
+          format: int64
+        time:
+          type: string
+        num_txs:
+          type: integer
+          format: int64
+        total_txs:
+          type: integer
+          format: int64
+        last_block_id:
+          $ref: '#/components/schemas/BlockID'
+        last_commit_hash:
+          type: string
+        data_hash:
+          type: string
+        validators_hash:
+          type: string
+        next_validators_hash:
+          type: string
+        consensus_hash:
+          type: string
+        app_hash:
+          type: string
+        last_results_hash:
+          type: string
+        evidence_hash:
+          type: string
+        proposer_address:
+          type: string
+    BlockID:
+      type: object
+      properties:
+        hash:
+          type: string
+        parts:
+          $ref: '#/components/schemas/PartSetHeader'
+    BlockMeta:
+      type: object
+      properties:
+        block_id:
+          $ref: '#/components/schemas/BlockID'
+        blockHeader:
+          $ref: '#/components/schemas/BlockHeader'
+    Commit:
+      type: object
+      properties:
+        block_id:
+          $ref: '#/components/schemas/BlockID'
+        commit_signature:
+          $ref: '#/components/schemas/CommitSignature'
+    CommitSignature:
+      type: object
+      properties:
+        type:
+          type: string
+        height:
+          type: integer
+          format: int64
+        round:
+          type: integer
+        block_id:
+          $ref: '#/components/schemas/BlockID'
+        timestamp:
+          type: string
+        validator_address:
+          type: string
+        validator_index:
+          type: integer
+          format: int32
+        signature:
+          type: string
+    Consensus:
+      type: object
+      properties:
+        block:
+          type: integer
+          format: int64
+        app:
+          type: integer
+          format: int64
+    Node:
+      type: object
+      properties:
+        address:
+          type: string
+          description: The hex address of the validator
+        cons_pubkey:
+          type: string
+          description: The hex consensus public key of the validator
+        jailed:
+          type: boolean
+          description: Has the validator been jailed from staked status
+          default: false
+        status:
+          type: string
+          description: Validator status
+        staked_tokens:
+          type: string
+          description: How many tokens has this node staked
+        chains:
+          type: array
+          items:
+            type: string
+          description: Blockchains supported
+        unstaking_completion_time:
+          type: string
+          description: If unstaking, the minimum time for the validator to complete unstaking
+    NodeParams:
+      type: object
+      properties:
+        unstaking_time:
+          type: integer
+          format: int64
+          description: TODO
+        max_validator:
+          type: integer
+          format: int64
+          description: TODO
+        stake_denom:
+          type: string
+          description: TODO
+        stake_minimum:
+          type: integer
+          format: int64
+          description: TODO
+        proposer_reward_percentage:
+          type: integer
+          format: int32
+          description: TODO
+        session_block:
+          type: integer
+          format: int64
+          description: TODO
+        relays_to_tokens:
+          type: integer
+          format: int64
+          description: TODO
+        max_evidence_age:
+          type: integer
+          format: int64
+          description: TODO
+        signed_blocks_window:
+          type: integer
+          format: int64
+          description: TODO
+        min_signed_per_window:
+          type: integer
+          format: int64
+          description: TODO
+        downtime_jail_duration:
+          type: integer
+          format: int64
+          description: TODO
+        slash_fraction_double_sign:
+          type: integer
+          format: int64
+          description: TODO
+        slash_fraction_downtime:
+          type: integer
+          format: int64
+          description: TODO
+    PartSetHeader:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        hash:
+          type: string
+    PocketParams:
+      type: object
+      properties:
+        session_node_count:
+          type: integer
+          format: int64
+          description: Number of nodes in this session
+        proof_waiting_period:
+          type: integer
+          format: int64
+          description: Proof waiting period
+        supported_blockchains:
+          type: array
+          description: Supported blockchains
+          items:
+            type: string
+        claim_expiration:
+          type: integer
+          format: int64
+          description: Claim expiration
+    Proof:
+      type: object
+      properties:
+        index:
+          type: integer
+          format: int64
+          description: Index value
+        session_blockheight:
+          type: integer
+          format: int64
+          description: Height of the session
+        service_pubkey:
+          type: string
+          description: Service public key
+        blockchain:
+          type: string
+          description: Blockchain hex string
+        token:
+          type: string
+          description: Application Authentication Token
+        signature:
+          type: string
+          description: Proof's signature
+    RelayHeader:
+      type: object
+      additionalProperties:
+        type: string
+    RelayPayload:
+      type: object
+      properties:
+        data:
+          type: string
+          description: The actual data of the request string for the external chain
+        method:
+          type: string
+          description: The HTTP CRUD method
+        path:
+          type: string
+          description: The REST path
+        headers:
+          $ref: '#/components/schemas/RelayHeader'
+    SessionHeader:
+      type: object
+      properties:
+        application_pubkey:
+          type: string
+          description: Application key associated with a client
+        chain:
+          type: string
+          description: Blockchain for this session
+        session_blockheight:
+          type: integer
+          format: int64
+          description: Height of the session
+    SimpleProof:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        index:
+          type: integer
+          format: int64
+        leaf_hash:
+          type: string
+        aunts:
+          type: array
+          items:
+            type: string
+    StoredProof:
+      type: object
+      properties:
+        session_header:
+          $ref: '#/components/schemas/SessionHeader'
+        servicer_address:
+          type: string
+        total_relays:
+          type: integer
+          format: int64
+    Transaction:
+      type: object
+      properties:
+        hash:
+          type: string
+        height:
+          type: integer
+          format: int64
+        index:
+          type: integer
+          format: int64
+        tx:
+          type: string
+        proof:
+          $ref: '#/components/schemas/TXProof'
+    TXProof:
+      type: object
+      properties:
+        root_hash:
+          type: string
+        data:
+          type: string
+        proof:
+          $ref: '#/components/schemas/SimpleProof'
+    QueryAddressHeight:
+      type: object
+      properties:
+        address:
+          type: string
+        height:
+          type: integer
+          format: int64
+    QueryBalanceResponse:
+      type: object
+      properties:
+        balance:
+          type: integer
+          format: int64
+    QueryBlock:
+      type: object
+      properties:
+        height:
+          type: integer
+          format: int64
+    QueryBlockResponse:
+      type: object
+      properties:
+        block:
+          $ref: '#/components/schemas/Block'
+        block_meta:
+          $ref: '#/components/schemas/BlockMeta'
+    QueryDispatchRequest:
+      type: object
+      properties:
+        session_header:
+          $ref: '#/components/schemas/SessionHeader'
+    QueryDispatchResponse:
+      type: object
+      properties:
+        header:
+          type: string
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+    QueryHeight:
+      type: object
+      properties:
+        height:
+          type: integer
+          format: int64
+    QueryHeightResponse:
+      type: object
+      properties:
+        height:
+          type: integer
+          format: int64
+    QueryNodeProof:
+      type: object
+      properties:
+        address:
+          type: string
+          description: Node address
+        blockchain:
+          $ref: '#/components/schemas/Blockchain'
+        app_pubkey:
+          type: string
+          description: Application key associated with a client
+        session_block_height:
+          type: integer
+          format: int64
+          description: Session block height
+        height:
+          type: integer
+          format: int64
+          description: Height of the session
+    QueryNodeProofsResponse:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoredProof'
+    QueryNodesResponse:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+    QueryRelayRequest:
+      type: object
+      properties:
+        payload:
+          $ref: '#/components/schemas/RelayPayload'
+        proof:
+          $ref: '#/components/schemas/Proof'
+    QueryRelayResponse:
+      type: object
+      properties:
+        signature:
+          type: string
+          description: Signature of the response
+        response:
+          type: string
+          description: Plain text of the response
+        proof:
+          $ref: '#/components/schemas/Proof'
+    QueryStakingHeight:
+      type: object
+      properties:
+        staking_status:
+          type: string
+          enum: [staked, unstaked, unstaking, '']
+        height:
+          type: integer
+          format: int64
+    QuerySupplyResponse:
+      type: object
+      properties:
+        node_staked:
+          type: integer
+          format: int64
+          description: Amount staked by the node
+        app_staked:
+          type: integer
+          format: int64
+          description: Amount staked by the app
+        dao:
+          type: integer
+          format: int64
+          description: DAO amount
+        total_staked:
+          type: integer
+          format: int64
+          description: Total amount staked
+        total_unstaked:
+          type: integer
+          format: int64
+          description: Total amount unstaked
+        total:
+          type: integer
+          format: int64
+          description: Total amount
+    QuerySupportedChainsResponse:
+      type: object
+      properties:
+        supported_chains:
+          type: array
+          description: Supported blockchains
+          items:
+            type: string
+    QueryTX:
+      type: object
+      properties:
+        hash:
+          type: string
+    QueryTXResponse:
+      type: object
+      properties:
+        transaction:
+          $ref: '#/components/schemas/Transaction'
