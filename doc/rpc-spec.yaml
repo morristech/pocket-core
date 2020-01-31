@@ -593,54 +593,54 @@ components:
         unstaking_time:
           type: integer
           format: int64
-          description: TODO
+          description: How much time must pass between the begin_unstaking_tx and the node transitioning to unstaked status
         max_validator:
           type: integer
           format: int64
-          description: TODO
+          description: Maximum number of validators in the network at any given block
         stake_denom:
           type: string
-          description: TODO
+          description: The monetary denomination of the coins in the network `uPOKT` or `uAtom` or `Wei`
         stake_minimum:
           type: integer
           format: int64
-          description: TODO
+          description: Minimum amount of `uPOKT` needed to stake in the network as a node
         proposer_reward_percentage:
           type: integer
           format: int32
-          description: TODO
+          description: Award percentage of the mint for the proposer
         session_block:
           type: integer
           format: int64
-          description: TODO
+          description: How many blocks are in a session
         relays_to_tokens:
           type: integer
           format: int64
-          description: TODO
+          description: How many relays serviced award tokens
         max_evidence_age:
           type: integer
           format: int64
-          description: TODO
+          description: Maximum age of tendermint evidence that is still valid (currently not implemented in Cosmos or Pocket-Core)
         signed_blocks_window:
           type: integer
           format: int64
-          description: TODO
+          description: Window of time in blocks (unit) used for signature verification -> specifically in not signing (missing) blocks
         min_signed_per_window:
           type: integer
           format: int64
-          description: TODO
+          description: Minimum number of blocks the node must sign per window
         downtime_jail_duration:
           type: integer
           format: int64
-          description: TODO
+          description: Minimum amount of time node must spend in jail after missing blocks
         slash_fraction_double_sign:
           type: integer
           format: int64
-          description: TODO
+          description: The factor of which a node is slashed for a double sign
         slash_fraction_downtime:
           type: integer
           format: int64
-          description: TODO
+          description: The factor of which a node is slashed for a double sign
     PartSetHeader:
       type: object
       properties:
