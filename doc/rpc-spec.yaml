@@ -6,7 +6,7 @@ info:
   contact:
     email: hola@pokt.network
   license:
-    name: MIT
+    name: Apache 2.0 License
     url: https://github.com/pokt-network/pocket-core/LICENSE.md
   version: 1.0.0
 externalDocs:
@@ -72,6 +72,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/QueryRelayResponse'
+  /client/rawtx:
+    post:
+      tags:
+      - client
+      requestBody:
+        description: Raw transaction to be relayed to a target address
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRawTXRequest'
+      responses:
+        200:
+          description: Response from the relayed raw request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryRawTXResponse'
   /query/app:
     post:
       tags:
@@ -408,6 +426,37 @@ paths:
           description: Failed to retrieve the transaction information
 components:
   schemas:
+    ABCIEvent:
+      type: object
+      properties:
+        type:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+    ABCIMessageLog:
+      type: object
+      properties:
+        msg_index:
+          type: integer
+          format: uint16
+          description: Ordered index of the log message
+        success:
+          type: boolean
+          description: Success or failure?
+        log:
+          type: string
+          description: Full text of the log
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ABCIEvent'
     Application:
       type: object
       properties:
@@ -753,16 +802,20 @@ components:
       properties:
         hash:
           type: string
+          description: Hash of the transaction
         height:
           type: integer
           format: int64
+          description: Blockheight of the transaction
         index:
           type: integer
           format: int64
         tx:
           type: string
+          description: Raw data of the transaction
         proof:
           $ref: '#/components/schemas/TXProof'
+          description: Proof of the transaction
     TXProof:
       type: object
       properties:
@@ -860,6 +913,51 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Node'
+    QueryRawTXRequest:
+      type: object
+      properties:
+        addr:
+          type: string
+        raw_hex_bytes:
+          type: string
+    QueryRawTXResponse:
+      type: object
+      properties:
+        height:
+          type: integer
+          format: int64
+          description: Blockheight of the transaction
+        txhash:
+          type: string
+          description: Hash of the transaction
+        code:
+          type: integer
+          format: uint32
+          description: Result code returned (0 is OK; everything else is error)
+        data:
+          type: string
+          description: Raw transaction data
+        raw_log:
+          type: string
+          description: Raw transaction log
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ABCIMessageLog'
+          description: ABCI Tendermint Logs
+        info:
+          type: string
+        gas_wanted:
+          type: integer
+          format: int64
+        gas_used:
+          type: integer
+          format: int64
+        codespace:
+          type: string
+        timestamp:
+          type: string
+          description: Timestamp of the transaction
     QueryRelayRequest:
       type: object
       properties:
