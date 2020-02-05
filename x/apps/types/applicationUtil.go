@@ -21,12 +21,7 @@ func (v Applications) String() (out string) {
 }
 
 func (v Applications) JSON() (out []byte, err error) {
-	var result []string
-	for _, val := range v {
-		r := val.String()
-		result = append(result, r)
-	}
-	return json.Marshal(result)
+	return json.Marshal(v)
 }
 
 // MUST return the amino encoded version of this application
@@ -71,9 +66,9 @@ type hexApplication struct {
 	Jailed                  bool        `json:"jailed" yaml:"jailed"`                     // has the application been jailed from staked status?
 	Chains                  []string    `json:"chains" yaml:"chains"`
 	MaxRelays               sdk.Int
-	Status                  sdk.BondStatus `json:"status" yaml:"status"`                 // application status (bonded/unbonding/unbonded)
-	StakedTokens            sdk.Int        `json:"stakedTokens" yaml:"stakedTokens"`     // how many staked tokens
-	UnstakingCompletionTime time.Time      `json:"unstaking_time" yaml:"unstaking_time"` // if unstaking, min time for the application to complete unstaking
+	Status                  sdk.StakeStatus `json:"status" yaml:"status"`                 // application status (staked/unstaking/unstaked)
+	StakedTokens            sdk.Int         `json:"stakedTokens" yaml:"stakedTokens"`     // how many staked tokens
+	UnstakingCompletionTime time.Time       `json:"unstaking_time" yaml:"unstaking_time"` // if unstaking, min time for the application to complete unstaking
 }
 
 // MarshalJSON marshals the application to JSON using Hex

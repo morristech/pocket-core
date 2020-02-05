@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	appexported "github.com/pokt-network/pocket-core/x/apps/exported"
 	nodeexported "github.com/pokt-network/pocket-core/x/nodes/exported"
 	sdk "github.com/pokt-network/posmint/types"
@@ -259,7 +260,7 @@ func (sk SessionKey) Validate() sdk.Error {
 
 // RelayProof of relay header
 type SessionHeader struct {
-	ApplicationPubKey  string `json:"app_pub_key"`
+	ApplicationPubKey  string `json:"app_public_key"`
 	Chain              string `json:"chain"`
 	SessionBlockHeight int64  `json:"session_height"`
 }
@@ -292,11 +293,11 @@ func (sh SessionHeader) HashString() string {
 func (sh SessionHeader) Bytes() []byte {
 	res, err := json.Marshal(sh)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("an error occured converting the session header into bytes:\n%v", err))
 	}
 	return res
 }
 
 func BlockHashFromBlockHeight(ctx sdk.Context, height int64) string {
-	return hex.EncodeToString(ctx.WithBlockHeight(height).BlockHeader().LastBlockId.Hash)
+	return hex.EncodeToString(ctx.MustGetPrevCtx(height).BlockHeader().LastBlockId.Hash)
 }

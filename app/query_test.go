@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/hex"
+	"fmt"
 	apps "github.com/pokt-network/pocket-core/x/apps"
 	"github.com/pokt-network/pocket-core/x/nodes"
 	pocket "github.com/pokt-network/pocket-core/x/pocketcore"
@@ -57,10 +58,11 @@ func TestQueryTx(t *testing.T) {
 		tx, err = nodes.Send(memCodec(), memCli, kb, cb.GetAddress(), kp.GetAddress(), "test", sdk.NewInt(1000))
 		assert.Nil(t, err)
 		assert.NotNil(t, tx)
-		time.Sleep(time.Second / 2)
 	}
 	select {
-	case <-evtChan:
+	case res := <-evtChan:
+		time.Sleep(time.Second * 1)
+		fmt.Println(res.Data.(tmTypes.EventDataTx))
 		got, err := nodes.QueryTransaction(memCli, tx.TxHash)
 		assert.Nil(t, err)
 		validator, err := nodes.QueryAccountBalance(memCodec(), memCli, kp.GetAddress(), 0)
@@ -151,7 +153,7 @@ func TestQueryPOSParams(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(100000), got.MaxValidators)
 		assert.Equal(t, int64(1000000), got.StakeMinimum)
-		assert.Equal(t, int8(90), got.ProposerRewardPercentage)
+		assert.Equal(t, int64(10), got.DAOAllocation)
 		assert.Equal(t, "stake", got.StakeDenom)
 	}
 	cleanup()
@@ -232,7 +234,7 @@ func TestQueryPocketParams(t *testing.T) {
 		assert.NotNil(t, got)
 		assert.Equal(t, int64(5), got.SessionNodeCount)
 		assert.Equal(t, int64(3), got.ProofWaitingPeriod)
-		assert.Equal(t, int64(25), got.ClaimExpiration)
+		assert.Equal(t, int64(100), got.ClaimExpiration)
 		assert.Contains(t, got.SupportedBlockchains, dummyChainsHash)
 	}
 	cleanup()
@@ -317,7 +319,7 @@ func TestQueryStakedApp(t *testing.T) {
 		got, err := apps.QueryApplication(memCodec(), memCli, kp.GetAddress(), 0)
 		assert.Nil(t, err)
 		assert.NotNil(t, got)
-		assert.Equal(t, sdk.Bonded, got.Status)
+		assert.Equal(t, sdk.Staked, got.Status)
 		assert.Equal(t, false, got.Jailed)
 	}
 	cleanup()
@@ -327,7 +329,6 @@ func TestQueryStakedApp(t *testing.T) {
 func TestQueryRelay(t *testing.T) {
 	genBz, validators, app := fiveValidatorsOneAppGenesis()
 	// setup relay endpoint
-	defer gock.Off()
 	expectedRequest := `"jsonrpc":"2.0","method":"web3_sha3","params":["0x68656c6c6f20776f726c64"],"id":64`
 	expectedResponse := "0x47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad"
 	gock.New(dummyChainsURL).
@@ -378,6 +379,8 @@ func TestQueryRelay(t *testing.T) {
 		assert.Equal(t, expectedResponse, res.Response)
 		cleanup()
 		stopCli()
+		gock.Off()
+		return
 	}
 }
 

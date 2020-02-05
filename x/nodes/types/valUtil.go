@@ -21,12 +21,8 @@ func (v Validators) String() (out string) {
 }
 
 func (v Validators) JSON() (out []byte, err error) {
-	var result []string
-	for _, val := range v {
-		r := val.String()
-		result = append(result, r)
-	}
-	return json.Marshal(result)
+	// each element should be a JSON
+	return json.Marshal(v)
 }
 
 // MUST return the amino encoded version of this validator
@@ -66,14 +62,14 @@ func (v Validator) String() string {
 
 // this is a helper struct used for JSON de- and encoding only
 type hexValidator struct {
-	Address                 sdk.Address    `json:"address" yaml:"address"`       // the hex address of the validator
-	PublicKey               string         `json:"public_key" yaml:"public_key"` // the hex consensus public key of the validator
-	Jailed                  bool           `json:"jailed" yaml:"jailed"`         // has the validator been jailed from staked status?
-	Status                  sdk.BondStatus `json:"status" yaml:"status"`         // validator status (bonded/unbonding/unbonded)
-	StakedTokens            sdk.Int        `json:"tokens" yaml:"tokens"`         // how many staked tokens
-	ServiceURL              string         `json:"service_url" yaml:"service_uRL"`
-	Chains                  []string       `json:"chains" yaml:"chains"`
-	UnstakingCompletionTime time.Time      `json:"unstaking_time" yaml:"unstaking_time"` // if unstaking, min time for the validator to complete unstaking
+	Address                 sdk.Address     `json:"address" yaml:"address"`       // the hex address of the validator
+	PublicKey               string          `json:"public_key" yaml:"public_key"` // the hex consensus public key of the validator
+	Jailed                  bool            `json:"jailed" yaml:"jailed"`         // has the validator been jailed from staked status?
+	Status                  sdk.StakeStatus `json:"status" yaml:"status"`         // validator status (staked/unstaking/unstaked)
+	StakedTokens            sdk.Int         `json:"tokens" yaml:"tokens"`         // how many staked tokens
+	ServiceURL              string          `json:"service_url" yaml:"service_uRL"`
+	Chains                  []string        `json:"chains" yaml:"chains"`
+	UnstakingCompletionTime time.Time       `json:"unstaking_time" yaml:"unstaking_time"` // if unstaking, min time for the validator to complete unstaking
 }
 
 // MarshalJSON marshals the validator to JSON using Hex

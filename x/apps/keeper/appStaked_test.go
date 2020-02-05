@@ -8,9 +8,9 @@ import (
 )
 
 func TestGetAndSetStakedApplication(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	unboundedApplication := getUnbondedApplication()
-	jailedApp := getBondedApplication()
+	stakedApplication := getStakedApplication()
+	unstakedApplication := getUnstakedApplication()
+	jailedApp := getStakedApplication()
 	jailedApp.Jailed = true
 
 	type want struct {
@@ -25,12 +25,12 @@ func TestGetAndSetStakedApplication(t *testing.T) {
 	}{
 		{
 			name:         "gets applications",
-			applications: []types.Application{boundedApplication},
-			want:         want{applications: []types.Application{boundedApplication}, length: 1},
+			applications: []types.Application{stakedApplication},
+			want:         want{applications: []types.Application{stakedApplication}, length: 1},
 		},
 		{
 			name:         "gets emtpy slice of applications",
-			applications: []types.Application{unboundedApplication},
+			applications: []types.Application{unstakedApplication},
 			want:         want{applications: []types.Application{}, length: 0},
 		},
 		{
@@ -39,9 +39,9 @@ func TestGetAndSetStakedApplication(t *testing.T) {
 			want:         want{applications: []types.Application{}, length: 0},
 		},
 		{
-			name:         "only gets bounded applications",
-			applications: []types.Application{boundedApplication, unboundedApplication},
-			want:         want{applications: []types.Application{boundedApplication}, length: 1},
+			name:         "only gets staked applications",
+			applications: []types.Application{stakedApplication, unstakedApplication},
+			want:         want{applications: []types.Application{stakedApplication}, length: 1},
 		},
 	}
 
@@ -50,10 +50,11 @@ func TestGetAndSetStakedApplication(t *testing.T) {
 			context, _, keeper := createTestInput(t, true)
 			for _, application := range test.applications {
 				keeper.SetApplication(context, application)
-				keeper.SetStakedApplication(context, application)
+				if application.IsStaked() {
+					keeper.SetStakedApplication(context, application)
+				}
 			}
 			applications := keeper.getStakedApplications(context)
-
 			if equal := assert.ObjectsAreEqualValues(applications, test.want.applications); !equal { // note ObjectsAreEqualValues does not assert, manual verification is required
 				t.FailNow()
 			}
@@ -63,7 +64,7 @@ func TestGetAndSetStakedApplication(t *testing.T) {
 }
 
 func TestRemoveStakedApplicationTokens(t *testing.T) {
-	boundedApplication := getBondedApplication()
+	stakedApplication := getStakedApplication()
 
 	type want struct {
 		tokens       sdk.Int
@@ -79,14 +80,14 @@ func TestRemoveStakedApplicationTokens(t *testing.T) {
 	}{
 		{
 			name:        "removes tokens from application applications",
-			application: boundedApplication,
+			application: stakedApplication,
 			amount:      sdk.NewInt(5),
 			panics:      false,
 			want:        want{tokens: sdk.NewInt(99999999995), applications: []types.Application{}},
 		},
 		{
 			name:        "removes tokens from application applications",
-			application: boundedApplication,
+			application: stakedApplication,
 			amount:      sdk.NewInt(-5),
 			panics:      true,
 			want:        want{tokens: sdk.NewInt(99999999995), applications: []types.Application{}, errorMessage: "trying to remove negative tokens"},
@@ -117,8 +118,8 @@ func TestRemoveStakedApplicationTokens(t *testing.T) {
 }
 
 func TestRemoveDeleteFromStakingSet(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	unboundedApplication := getUnbondedApplication()
+	stakedApplication := getStakedApplication()
+	unstakedApplication := getUnstakedApplication()
 
 	tests := []struct {
 		name         string
@@ -128,7 +129,7 @@ func TestRemoveDeleteFromStakingSet(t *testing.T) {
 	}{
 		{
 			name:         "removes applications from set",
-			applications: []types.Application{boundedApplication, unboundedApplication},
+			applications: []types.Application{stakedApplication, unstakedApplication},
 			panics:       false,
 		},
 	}
@@ -151,8 +152,8 @@ func TestRemoveDeleteFromStakingSet(t *testing.T) {
 }
 
 func TestGetValsIterator(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	unboundedApplication := getUnbondedApplication()
+	stakedApplication := getStakedApplication()
+	unstakedApplication := getUnstakedApplication()
 
 	tests := []struct {
 		name         string
@@ -162,7 +163,7 @@ func TestGetValsIterator(t *testing.T) {
 	}{
 		{
 			name:         "recieves a valid iterator",
-			applications: []types.Application{boundedApplication, unboundedApplication},
+			applications: []types.Application{stakedApplication, unstakedApplication},
 			panics:       false,
 		},
 	}
@@ -182,8 +183,8 @@ func TestGetValsIterator(t *testing.T) {
 }
 
 func TestApplicationStaked_IterateAndExecuteOverStakedApps(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	secondBoundedApplication := getBondedApplication()
+	stakedApplication := getStakedApplication()
+	secondStakedApplication := getStakedApplication()
 
 	tests := []struct {
 		name         string
@@ -193,7 +194,7 @@ func TestApplicationStaked_IterateAndExecuteOverStakedApps(t *testing.T) {
 	}{
 		{
 			name:         "iterates over applications",
-			applications: []types.Application{boundedApplication, secondBoundedApplication},
+			applications: []types.Application{stakedApplication, secondStakedApplication},
 			want:         2,
 		},
 	}
@@ -217,7 +218,7 @@ func TestApplicationStaked_IterateAndExecuteOverStakedApps(t *testing.T) {
 	}
 }
 func TestApplicationStaked_RemoveApplicationRelays(t *testing.T) {
-	boundedApplication := getBondedApplication()
+	stakedApplication := getStakedApplication()
 
 	tests := []struct {
 		name        string
@@ -227,7 +228,7 @@ func TestApplicationStaked_RemoveApplicationRelays(t *testing.T) {
 	}{
 		{
 			name:        "iterates over applications",
-			application: boundedApplication,
+			application: stakedApplication,
 			remove:      sdk.NewInt(100000000000 / 2),
 			want:        sdk.NewInt(100000000000 / 2),
 		},

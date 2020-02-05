@@ -11,17 +11,21 @@ import (
 	nodesTypes "github.com/pokt-network/pocket-core/x/nodes/types"
 	pocket "github.com/pokt-network/pocket-core/x/pocketcore"
 	"github.com/pokt-network/pocket-core/x/pocketcore/types"
+	"github.com/pokt-network/posmint/baseapp"
 	"github.com/pokt-network/posmint/codec"
 	cfg "github.com/pokt-network/posmint/config"
 	"github.com/pokt-network/posmint/crypto"
 	kb "github.com/pokt-network/posmint/crypto/keys"
+	"github.com/pokt-network/posmint/store"
 	sdk "github.com/pokt-network/posmint/types"
 	"github.com/pokt-network/posmint/types/module"
 	"github.com/pokt-network/posmint/x/auth"
 	"github.com/pokt-network/posmint/x/bank"
 	"github.com/pokt-network/posmint/x/params"
 	"github.com/pokt-network/posmint/x/supply"
+	"github.com/spf13/cobra"
 	con "github.com/tendermint/tendermint/config"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
@@ -185,16 +189,17 @@ func InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort string) *node
 	// setup tendermint node config
 	newTMConfig := con.DefaultConfig()
 	newTMConfig.SetRoot(datadir)
-	newTMConfig.DBPath = datadir
+	//newTMConfig.DBPath = datadir
 	newTMConfig.NodeKey = defaultNodeKey
 	newTMConfig.PrivValidatorKey = defaultValKey
 	newTMConfig.PrivValidatorState = defaultValState
+	newTMConfig.P2P.AddrBookStrict = false
 	newTMConfig.RPC.ListenAddress = defaultListenAddr + tmRPCPort
 	newTMConfig.P2P.ListenAddress = defaultListenAddr + tmPeersPort // Node listen address. (0.0.0.0:0 means any interface, any port)
 	newTMConfig.P2P.PersistentPeers = persistentPeers               // Comma-delimited ID@host:port persistent peers
 	newTMConfig.P2P.Seeds = seeds                                   // Comma-delimited ID@host:port seed nodes
 	newTMConfig.Consensus.CreateEmptyBlocks = true                  // Set this to false to only produce blocks when there are txs or when the AppHash changes
-	newTMConfig.Consensus.CreateEmptyBlocksInterval = time.Second * 10
+	newTMConfig.Consensus.CreateEmptyBlocksInterval = time.Minute * 2
 	newTMConfig.P2P.MaxNumInboundPeers = 40
 	newTMConfig.P2P.MaxNumOutboundPeers = 10
 
@@ -205,8 +210,8 @@ func InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort string) *node
 	}
 
 	var err error
-	tmNode, err := NewClient(config(c), func(logger log.Logger, db dbm.DB, _ io.Writer) *pocketCoreApp {
-		return NewPocketCoreApp(logger, db)
+	tmNode, app, err := NewClient(config(c), func(logger log.Logger, db dbm.DB, _ io.Writer) *pocketCoreApp {
+		return NewPocketCoreApp(logger, db, baseapp.SetPruning(store.PruneNothing))
 	})
 	if err != nil {
 		panic(err)
@@ -214,6 +219,7 @@ func InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort string) *node
 	if err := tmNode.Start(); err != nil {
 		panic(err)
 	}
+	app.SetTendermintNode(tmNode)
 	return tmNode
 }
 
@@ -541,7 +547,7 @@ func newDefaultGenesisState(pubKey crypto.PublicKey) []byte {
 	posGenesisState.Validators = append(posGenesisState.Validators,
 		nodesTypes.Validator{Address: sdk.Address(pubKey.Address()),
 			PublicKey:    pubKey,
-			Status:       sdk.Bonded,
+			Status:       sdk.Staked,
 			Chains:       []string{dummyChainsHash},
 			ServiceURL:   dummyServiceURL,
 			StakedTokens: sdk.NewInt(10000000)})
@@ -550,4 +556,71 @@ func newDefaultGenesisState(pubKey crypto.PublicKey) []byte {
 
 	j, _ := types.ModuleCdc.MarshalJSONIndent(defaultGenesis, "", "    ")
 	return j
+}
+
+// XXX: this is totally unsafe.
+// it's only suitable for testnets.
+func ResetWorldState(cmd *cobra.Command, args []string) {
+	// setup the logger
+	logger := log.NewTMLoggerWithColorFn(log.NewSyncWriter(os.Stdout), func(keyvals ...interface{}) term.FgBgColor {
+		if keyvals[0] != kitlevel.Key() {
+			panic(fmt.Sprintf("expected level key to be first, got %v", keyvals[0]))
+		}
+		switch keyvals[1].(kitlevel.Value).String() {
+		case "info":
+			return term.FgBgColor{Fg: term.Green}
+		case "debug":
+			return term.FgBgColor{Fg: term.DarkBlue}
+		case "error":
+			return term.FgBgColor{Fg: term.Red}
+		default:
+			return term.FgBgColor{}
+		}
+	})
+
+	// setup tendermint node config
+	newTMConfig := con.DefaultConfig()
+	newTMConfig.SetRoot(getDataDir())
+
+	ResetAll(newTMConfig.DBDir(), newTMConfig.P2P.AddrBookFile(), getDataDir()+fs+privValKeyName,
+		getDataDir()+fs+privValStateName, logger)
+}
+
+var keepAddrBook = false
+
+// ResetAll removes address book files plus all data, and resets the privValdiator data.
+// Exported so other CLI tools can use it.
+func ResetAll(dbDir, addrBookFile, privValKeyFile, privValStateFile string, logger log.Logger) {
+	if keepAddrBook {
+		logger.Info("The address book remains intact")
+	} else {
+		removeAddrBook(addrBookFile, logger)
+	}
+	if err := os.RemoveAll(dbDir); err == nil {
+		logger.Info("Removed all blockchain history", "dir", dbDir)
+	} else {
+		logger.Error("Error removing all blockchain history", "dir", dbDir, "err", err)
+	}
+	// recreate the dbDir since the privVal state needs to live there
+	cmn.EnsureDir(dbDir, 0700)
+	resetFilePV(privValKeyFile, privValStateFile, logger)
+}
+
+func resetFilePV(privValKeyFile, privValStateFile string, logger log.Logger) {
+
+	if _, err := os.Stat(privValKeyFile); err == nil {
+		os.Remove(privValKeyFile)
+		os.Remove(privValStateFile)
+		os.Remove(getDataDir() + fs + nodeKeyName)
+	}
+	logger.Info("Reset private validator file", "keyFile", privValKeyFile,
+		"stateFile", privValStateFile)
+}
+
+func removeAddrBook(addrBookFile string, logger log.Logger) {
+	if err := os.Remove(addrBookFile); err == nil {
+		logger.Info("Removed existing address book", "file", addrBookFile)
+	} else if !os.IsNotExist(err) {
+		logger.Info("Error removing address book", "file", addrBookFile, "err", err)
+	}
 }

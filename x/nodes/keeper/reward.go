@@ -11,7 +11,7 @@ import (
 // award coins to an address (will be called at the beginning of the next block)
 func (k Keeper) AwardCoinsTo(ctx sdk.Context, relays sdk.Int, address sdk.Address) {
 	award, _ := k.getValidatorAward(ctx, address)
-	coins := k.RelaysToTokensMultiplier(ctx).MulInt(relays).TruncateInt() // round down
+	coins := k.RelaysToTokensMultiplier(ctx).Mul(relays).Quo(sdk.NewInt(100)) // truncate
 	k.setValidatorAward(ctx, award.Add(coins), address)
 }
 
@@ -28,21 +28,22 @@ func (k Keeper) rewardFromFees(ctx sdk.Context, previousProposer sdk.Address) {
 	if err != nil {
 		panic(err)
 	}
-	// calculate the total reward by adding relays to the
-	totalReward := feesCollected.AmountOf(k.StakeDenom(ctx))
+	rewardForRelays := k.GetTotalCustomValidatorAwards(ctx)
+	// calculate the total reward by adding relays to the fees
+	totalReward := feesCollected.AmountOf(k.StakeDenom(ctx)).Add(rewardForRelays)
 	// calculate previous proposer reward
-	baseProposerRewardPercentage := k.getProposerRewardPercentage(ctx)
+	proposerAllocation := k.getProposerAllocaiton(ctx)
+	daoAllocation := k.getDAOAllocation(ctx)
 	// divide up the reward from the proposer reward and the dao reward
-	proposerReward := baseProposerRewardPercentage.Mul(totalReward).Quo(sdk.NewInt(100))
-	daoReward := totalReward.Sub(proposerReward)
+	proposerReward := proposerAllocation.Mul(totalReward).Quo(sdk.NewInt(100)) // truncates
+	daoReward := daoAllocation.Mul(totalReward).Quo(sdk.NewInt(100))           // truncates
 	// get the validator structure
 	proposerValidator := k.validatorByConsAddr(ctx, previousProposer)
 	if proposerValidator != nil {
 		propRewardCoins := sdk.NewCoins(sdk.NewCoin(k.StakeDenom(ctx), proposerReward))
 		daoRewardCoins := sdk.NewCoins(sdk.NewCoin(k.StakeDenom(ctx), daoReward))
 		// send to validator
-		if err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName,
-			sdk.Address(proposerValidator.GetAddress()), propRewardCoins); err != nil {
+		if err := k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, proposerValidator.GetAddress(), propRewardCoins); err != nil {
 			panic(err)
 		}
 		// send to rest dao
@@ -97,11 +98,11 @@ func (k Keeper) getValidatorAward(ctx sdk.Context, address sdk.Address) (coins s
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(types.KeyForValidatorAward(address))
 	if value == nil {
-		return coins, false
+		return sdk.ZeroInt(), false
 	}
 	k.cdc.MustUnmarshalBinaryBare(value, &coins)
 	found = true
-	return
+	return coins, true
 }
 
 func (k Keeper) deleteValidatorAward(ctx sdk.Context, address sdk.Address) {
@@ -160,8 +161,10 @@ func (k Keeper) SetPreviousProposer(ctx sdk.Context, consAddr sdk.Address) {
 	store.Set(types.ProposerKey, b)
 }
 
-// returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) getProposerRewardPercentage(ctx sdk.Context) sdk.Int {
-	return sdk.NewInt(int64(k.ProposerRewardPercentage(ctx)))
+func (k Keeper) getProposerAllocaiton(ctx sdk.Context) sdk.Int {
+	return sdk.NewInt(k.ProposerAllocation(ctx))
+}
+
+func (k Keeper) getDAOAllocation(ctx sdk.Context) sdk.Int {
+	return sdk.NewInt(k.DAOAllocation(ctx))
 }

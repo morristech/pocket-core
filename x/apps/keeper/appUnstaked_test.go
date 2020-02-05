@@ -8,9 +8,8 @@ import (
 )
 
 func TestAppUnstaked_GetAndSetlUnstaking(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	secondaryBoundedApplication := getBondedApplication()
-	stakedApplication := getBondedApplication()
+	stakedApplication := getStakedApplication()
+	unstaking := getUnstakingApplication()
 
 	type want struct {
 		applications       []types.Application
@@ -18,7 +17,7 @@ func TestAppUnstaked_GetAndSetlUnstaking(t *testing.T) {
 		length             int
 	}
 	type args struct {
-		boundedVal        types.Application
+		stakedVal         types.Application
 		applications      []types.Application
 		stakedApplication types.Application
 	}
@@ -31,19 +30,19 @@ func TestAppUnstaked_GetAndSetlUnstaking(t *testing.T) {
 	}{
 		{
 			name: "gets applications",
-			args: args{applications: []types.Application{boundedApplication}},
-			want: want{applications: []types.Application{boundedApplication}, length: 1, stakedApplications: false},
+			args: args{applications: []types.Application{unstaking}},
+			want: want{applications: []types.Application{unstaking}, length: 1, stakedApplications: false},
 		},
 		{
 			name: "gets emtpy slice of applications",
 			want: want{length: 0, stakedApplications: true},
-			args: args{stakedApplication: stakedApplication},
+			args: args{stakedApplication: unstaking},
 		},
 		{
-			name:         "only gets unstakedbounded applications",
-			applications: []types.Application{boundedApplication, secondaryBoundedApplication},
+			name:         "only gets unstaking applications",
+			applications: []types.Application{stakedApplication, unstaking},
 			want:         want{length: 1, stakedApplications: true},
-			args:         args{stakedApplication: stakedApplication, applications: []types.Application{boundedApplication}},
+			args:         args{stakedApplication: unstaking, applications: []types.Application{unstaking}},
 		},
 	}
 
@@ -52,11 +51,15 @@ func TestAppUnstaked_GetAndSetlUnstaking(t *testing.T) {
 			context, _, keeper := createTestInput(t, true)
 			for _, application := range tt.args.applications {
 				keeper.SetApplication(context, application)
-				keeper.SetUnstakingApplication(context, application)
+				if application.IsUnstaking() {
+					keeper.SetUnstakingApplication(context, application)
+				}
 			}
 			if tt.want.stakedApplications {
 				keeper.SetApplication(context, tt.args.stakedApplication)
-				keeper.SetStakedApplication(context, tt.args.stakedApplication)
+				if stakedApplication.IsStaked() {
+					keeper.SetStakedApplication(context, tt.args.stakedApplication)
+				}
 			}
 			applications := keeper.getAllUnstakingApplications(context)
 			if len(applications) != tt.want.length {
@@ -67,8 +70,8 @@ func TestAppUnstaked_GetAndSetlUnstaking(t *testing.T) {
 }
 
 func TestAppUnstaked_DeleteUnstakingApplication(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	secondBoundedApp := getBondedApplication()
+	stakedApplication := getStakedApplication()
+	secondStakedApp := getStakedApplication()
 
 	type want struct {
 		applications       []types.Application
@@ -76,7 +79,7 @@ func TestAppUnstaked_DeleteUnstakingApplication(t *testing.T) {
 		length             int
 	}
 	type args struct {
-		boundedVal        types.Application
+		stakedVal         types.Application
 		applications      []types.Application
 		stakedApplication types.Application
 	}
@@ -90,7 +93,7 @@ func TestAppUnstaked_DeleteUnstakingApplication(t *testing.T) {
 	}{
 		{
 			name: "deletes",
-			args: args{applications: []types.Application{boundedApplication, secondBoundedApp}},
+			args: args{applications: []types.Application{stakedApplication, secondStakedApp}},
 			sets: false,
 			want: want{length: 1, stakedApplications: false},
 		},
@@ -115,8 +118,8 @@ func TestAppUnstaked_DeleteUnstakingApplication(t *testing.T) {
 }
 
 func TestAppUnstaked_DeleteUnstakingApplications(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	secondaryBoundedApplication := getBondedApplication()
+	stakedApplication := getStakedApplication()
+	secondaryStakedApplication := getStakedApplication()
 
 	type want struct {
 		applications       []types.Application
@@ -124,7 +127,7 @@ func TestAppUnstaked_DeleteUnstakingApplications(t *testing.T) {
 		length             int
 	}
 	type args struct {
-		boundedVal        types.Application
+		stakedVal         types.Application
 		applications      []types.Application
 		stakedApplication types.Application
 	}
@@ -137,7 +140,7 @@ func TestAppUnstaked_DeleteUnstakingApplications(t *testing.T) {
 	}{
 		{
 			name: "deletes all unstaking application",
-			args: args{applications: []types.Application{boundedApplication, secondaryBoundedApplication}},
+			args: args{applications: []types.Application{stakedApplication, secondaryStakedApplication}},
 			want: want{length: 0, stakedApplications: false},
 		},
 	}
@@ -159,7 +162,7 @@ func TestAppUnstaked_DeleteUnstakingApplications(t *testing.T) {
 }
 
 func TestAppUnstaked_GetAllMatureApplications(t *testing.T) {
-	unboundingApplication := getUnbondingApplication()
+	stakingApplication := getUnstakingApplication()
 
 	type want struct {
 		applications       []types.Application
@@ -167,7 +170,7 @@ func TestAppUnstaked_GetAllMatureApplications(t *testing.T) {
 		length             int
 	}
 	type args struct {
-		boundedVal        types.Application
+		stakedVal         types.Application
 		applications      []types.Application
 		stakedApplication types.Application
 	}
@@ -180,13 +183,13 @@ func TestAppUnstaked_GetAllMatureApplications(t *testing.T) {
 	}{
 		{
 			name: "gets all mature applications",
-			args: args{applications: []types.Application{unboundingApplication}},
-			want: want{applications: []types.Application{unboundingApplication}, length: 1, stakedApplications: false},
+			args: args{applications: []types.Application{stakingApplication}},
+			want: want{applications: []types.Application{stakingApplication}, length: 1, stakedApplications: false},
 		},
 		{
 			name: "gets empty slice if no mature applications",
 			args: args{applications: []types.Application{}},
-			want: want{applications: []types.Application{unboundingApplication}, length: 0, stakedApplications: false},
+			want: want{applications: []types.Application{stakingApplication}, length: 0, stakedApplications: false},
 		},
 	}
 
@@ -205,7 +208,7 @@ func TestAppUnstaked_GetAllMatureApplications(t *testing.T) {
 }
 
 func TestAppUnstaked_UnstakeAllMatureApplications(t *testing.T) {
-	unboundingApplication := getUnbondingApplication()
+	stakingApplication := getUnstakingApplication()
 
 	type want struct {
 		applications       []types.Application
@@ -213,7 +216,7 @@ func TestAppUnstaked_UnstakeAllMatureApplications(t *testing.T) {
 		length             int
 	}
 	type args struct {
-		boundedVal        types.Application
+		stakedVal         types.Application
 		applications      []types.Application
 		stakedApplication types.Application
 	}
@@ -226,8 +229,8 @@ func TestAppUnstaked_UnstakeAllMatureApplications(t *testing.T) {
 	}{
 		{
 			name: "unstake mature applications",
-			args: args{applications: []types.Application{unboundingApplication}},
-			want: want{applications: []types.Application{unboundingApplication}, length: 0, stakedApplications: false},
+			args: args{applications: []types.Application{stakingApplication}},
+			want: want{applications: []types.Application{stakingApplication}, length: 0, stakedApplications: false},
 		},
 	}
 
@@ -247,8 +250,8 @@ func TestAppUnstaked_UnstakeAllMatureApplications(t *testing.T) {
 }
 
 func TestAppUnstaked_UnstakingApplicationsIterator(t *testing.T) {
-	boundedApplication := getBondedApplication()
-	unboundedApplication := getUnbondedApplication()
+	stakedApplication := getStakedApplication()
+	unstakedApplication := getUnstakedApplication()
 
 	tests := []struct {
 		name         string
@@ -258,7 +261,7 @@ func TestAppUnstaked_UnstakingApplicationsIterator(t *testing.T) {
 	}{
 		{
 			name:         "recieves a valid iterator",
-			applications: []types.Application{boundedApplication, unboundedApplication},
+			applications: []types.Application{stakedApplication, unstakedApplication},
 			panics:       false,
 		},
 	}

@@ -1,14 +1,18 @@
 package app
 
 import (
+	"encoding/hex"
+	"fmt"
 	apps "github.com/pokt-network/pocket-core/x/apps"
 	"github.com/pokt-network/pocket-core/x/nodes"
+	pocketTypes "github.com/pokt-network/pocket-core/x/pocketcore/types"
 	"github.com/pokt-network/posmint/crypto"
 	sdk "github.com/pokt-network/posmint/types"
 	"github.com/pokt-network/posmint/x/auth/types"
 	"github.com/pokt-network/posmint/x/bank"
 	"github.com/stretchr/testify/assert"
 	tmTypes "github.com/tendermint/tendermint/types"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -188,12 +192,12 @@ func TestSendRawTx(t *testing.T) {
 		[]sdk.Msg{bank.MsgSend{
 			FromAddress: cb.GetAddress(),
 			ToAddress:   kp.GetAddress(),
-			Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
+			Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultStakeDenom, sdk.NewInt(1))),
 		}},
 		[]crypto.PrivateKey{pk},
 		[]uint64{0},
 		[]uint64{0},
-		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)))))
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultStakeDenom, sdk.NewInt(1)))))
 	assert.Nil(t, err)
 	select {
 	case <-evtChan:
@@ -212,4 +216,63 @@ func TestSendRawTx(t *testing.T) {
 	}
 	cleanup()
 	stopCli()
+}
+
+func TestClaimTx(t *testing.T) {
+	genBz, validators, app := fiveValidatorsOneAppGenesis()
+	kb := getInMemoryKeybase()
+	for i := 0; i < 20; i++ {
+		appPrivateKey, err := kb.ExportPrivateKeyObject(app.Address, "test")
+		assert.Nil(t, err)
+		// setup AAT
+		aat := pocketTypes.AAT{
+			Version:              "0.0.1",
+			ApplicationPublicKey: appPrivateKey.PublicKey().RawString(),
+			ClientPublicKey:      appPrivateKey.PublicKey().RawString(),
+			ApplicationSignature: "",
+		}
+		sig, err := appPrivateKey.Sign(aat.Hash())
+		if err != nil {
+			panic(err)
+		}
+		aat.ApplicationSignature = hex.EncodeToString(sig)
+		proof := pocketTypes.RelayProof{
+			Entropy:            int64(rand.Int()),
+			SessionBlockHeight: 1,
+			ServicerPubKey:     validators[0].PublicKey.RawString(),
+			Blockchain:         dummyChainsHash,
+			Token:              aat,
+			Signature:          "",
+		}
+		sig, err = appPrivateKey.Sign(proof.Hash())
+		if err != nil {
+			t.Fatal(err)
+		}
+		proof.Signature = hex.EncodeToString(sig)
+		err = pocketTypes.GetAllInvoices().AddToInvoice(pocketTypes.SessionHeader{
+			ApplicationPubKey:  appPrivateKey.PublicKey().RawString(),
+			Chain:              dummyChainsHash,
+			SessionBlockHeight: 1,
+		}, proof)
+		assert.Nil(t, err)
+	}
+	_, _, cleanup := NewInMemoryTendermintNode(t, genBz)
+	_, stopCli, evtChan := subscribeTo(t, tmTypes.EventTx)
+	select {
+	case res := <-evtChan:
+		fmt.Println(res)
+		if !(res.Data.(tmTypes.EventDataTx).TxResult.Result.Events[1].Type == pocketTypes.EventTypeClaim) {
+			t.Fatal("claim message was not received first")
+		}
+		_, stopCli, evtChan = subscribeTo(t, tmTypes.EventTx)
+		select {
+		case res := <-evtChan:
+			if !(res.Data.(tmTypes.EventDataTx).TxResult.Result.Events[1].Type == pocketTypes.EventTypeProof) {
+				t.Fatal("proof message was not received afterward")
+			}
+			cleanup()
+			stopCli()
+			return
+		}
+	}
 }
