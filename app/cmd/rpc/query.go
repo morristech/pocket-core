@@ -39,7 +39,7 @@ func Block(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	res, err := app.QueryBlock(params.Height)
+	res, err := app.QueryBlock(&params.Height)
 	if err != nil {
 		WriteErrorResponse(w, 400, err.Error())
 		return
@@ -62,7 +62,7 @@ func Tx(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, er.Error())
 		return
 	}
-	WriteResponse(w, string(s), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(s), r.URL.Path, r.Host)
 }
 
 func Height(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -109,7 +109,7 @@ func Account(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	WriteResponse(w, string(s), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(s), r.URL.Path, r.Host)
 }
 
 func Nodes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -144,7 +144,11 @@ func Nodes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err != nil {
 		WriteErrorResponse(w, 400, err.Error())
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	_, err = w.Write(j)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Node(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -163,7 +167,7 @@ func Node(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
 }
 
 func NodeParams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -182,7 +186,7 @@ func NodeParams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
 }
 
 func NodeProofs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -228,7 +232,7 @@ func NodeProof(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
 }
 
 func Apps(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -263,7 +267,11 @@ func Apps(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err != nil {
 		WriteErrorResponse(w, 400, err.Error())
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	_, err = w.Write(j)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func App(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -282,7 +290,7 @@ func App(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
 }
 
 func AppParams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -301,7 +309,7 @@ func AppParams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
 }
 
 func PocketParams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -320,7 +328,7 @@ func PocketParams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	WriteResponse(w, string(j), r.URL.Path, r.Host)
+	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
 }
 
 func SupportedChains(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -362,7 +370,7 @@ func Supply(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	appsStaked, _, err := app.QueryTotalAppCoins(params.Height)
+	appsStaked, appsUnstaked, err := app.QueryTotalAppCoins(params.Height)
 	if err != nil {
 		WriteErrorResponse(w, 400, err.Error())
 		return
@@ -373,7 +381,7 @@ func Supply(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 	totalStaked := nodesStake.Add(appsStaked).Add(dao)
-	totalUnstaked := nodesUnstaked
+	totalUnstaked := nodesUnstaked.Add(appsUnstaked).Sub(nodesStake).Sub(appsStaked)
 	total := totalStaked.Add(totalUnstaked)
 	res, err := json.MarshalIndent(&querySupplyResponse{
 		NodeStaked:    nodesStake.Int64(),

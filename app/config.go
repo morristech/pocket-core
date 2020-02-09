@@ -74,7 +74,7 @@ var (
 	fs = string(fp.Separator)
 )
 
-func InitApp(datadir, tmNode, persistentPeers, seeds, tmRPCPort, tmPeersPort string) *node.Node {
+func InitApp(datadir, tmNode, persistentPeers, seeds, tmRPCPort, tmPeersPort string, blockTime int) *node.Node {
 	pswrd := InitConfig(datadir)
 	// setup coinbase password
 	if pswrd == "" {
@@ -87,9 +87,9 @@ func InitApp(datadir, tmNode, persistentPeers, seeds, tmRPCPort, tmPeersPort str
 	}
 	setcoinbasePassphrase(pswrd)
 	// set tendermint node
-	setTmNode(tmNode)
+	SetTMNode(tmNode)
 	// init the tendermint node
-	return InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort)
+	return InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort, blockTime)
 }
 
 func InitConfig(datadir string) string {
@@ -167,7 +167,7 @@ func InitGenesis() {
 	}
 }
 
-func InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort string) *node.Node {
+func InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort string, blockTime int) *node.Node {
 	datadir := getDataDir()
 	// setup the logger
 	logger := log.NewTMLoggerWithColorFn(log.NewSyncWriter(os.Stdout), func(keyvals ...interface{}) term.FgBgColor {
@@ -199,7 +199,8 @@ func InitTendermint(persistentPeers, seeds, tmRPCPort, tmPeersPort string) *node
 	newTMConfig.P2P.PersistentPeers = persistentPeers               // Comma-delimited ID@host:port persistent peers
 	newTMConfig.P2P.Seeds = seeds                                   // Comma-delimited ID@host:port seed nodes
 	newTMConfig.Consensus.CreateEmptyBlocks = true                  // Set this to false to only produce blocks when there are txs or when the AppHash changes
-	newTMConfig.Consensus.CreateEmptyBlocksInterval = time.Minute * 2
+	newTMConfig.Consensus.CreateEmptyBlocksInterval = time.Duration(blockTime) * time.Minute
+	newTMConfig.Consensus.TimeoutCommit = time.Duration(blockTime) * time.Minute
 	newTMConfig.P2P.MaxNumInboundPeers = 40
 	newTMConfig.P2P.MaxNumOutboundPeers = 10
 
@@ -470,7 +471,7 @@ func getCoinbasePassphrase() string {
 	return passphrase
 }
 
-func setTmNode(n string) {
+func SetTMNode(n string) {
 	tmNodeURI = n
 }
 

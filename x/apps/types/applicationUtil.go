@@ -46,28 +46,20 @@ func UnmarshalApplication(cdc *codec.Codec, appBytes []byte) (application Applic
 
 // HashString returns a human readable string representation of a application.
 func (a Application) String() string {
-	return fmt.Sprintf(`AppPubKey
-  Address:           		  %s
-  AppPubKey Cons Pubkey: 	  %s
-  Jailed:                     %v
-  Chains:                     %v
-  MaxRelays:                  %d
-  Status:                     %s
-  Tokens:               	  %s
-  Unstakeing Completion Time: %v`,
-		a.Address, a.PublicKey.RawString(), a.Jailed, a.Chains, a.MaxRelays, a.Status, a.StakedTokens, a.UnstakingCompletionTime,
+	return fmt.Sprintf("Address:\t\t%s\nPublic Key:\t\t%s\nJailed:\t\t\t%v\nChains:\t\t\t%v\nMaxRelays:\t\t%d\nStatus:\t\t\t%s\nTokens:\t\t\t%s\nUnstaking Time:\t%v",
+		a.Address, a.PublicKey.RawString(), a.Jailed, a.Chains, a.MaxRelays.Int64(), a.Status, a.StakedTokens, a.UnstakingCompletionTime,
 	)
 }
 
 // this is a helper struct used for JSON de- and encoding only
 type hexApplication struct {
-	Address                 sdk.Address `json:"operator_address" yaml:"operator_address"` // the hex address of the application
-	PublicKey               string      `json:"cons_pubkey" yaml:"cons_pubkey"`           // the hex consensus public key of the application
-	Jailed                  bool        `json:"jailed" yaml:"jailed"`                     // has the application been jailed from staked status?
-	Chains                  []string    `json:"chains" yaml:"chains"`
-	MaxRelays               sdk.Int
+	Address                 sdk.Address     `json:"address" yaml:"address"`               // the hex address of the application
+	PublicKey               string          `json:"public_key" yaml:"public_key"`         // the hex consensus public key of the application
+	Jailed                  bool            `json:"jailed" yaml:"jailed"`                 // has the application been jailed from staked status?
+	Chains                  []string        `json:"chains" yaml:"chains"`                 // non native (external) blockchains needed for the application
+	MaxRelays               sdk.Int         `json:"max_relays" yaml:"max_relays"`         // maximum number of relays allowed for the application
 	Status                  sdk.StakeStatus `json:"status" yaml:"status"`                 // application status (staked/unstaking/unstaked)
-	StakedTokens            sdk.Int         `json:"stakedTokens" yaml:"stakedTokens"`     // how many staked tokens
+	StakedTokens            sdk.Int         `json:"staked_tokens" yaml:"staked_tokens"`   // how many staked tokens
 	UnstakingCompletionTime time.Time       `json:"unstaking_time" yaml:"unstaking_time"` // if unstaking, min time for the application to complete unstaking
 }
 

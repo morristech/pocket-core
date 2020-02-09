@@ -181,6 +181,7 @@ func newMemPCApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseA
 	)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 	app.SetInitChainer(app.InitChainer)
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.supplyKeeper))
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.MountKVStores(app.keys)
@@ -458,6 +459,82 @@ func oneValTwoNodeGenesisState() []byte {
 			Chains:       []string{dummyChainsHash},
 			ServiceURL:   dummyServiceURL,
 			StakedTokens: sdk.NewInt(1000000000000000)})
+	res := memCodec().MustMarshalJSON(posGenesisState)
+	defaultGenesis[nodesTypes.ModuleName] = res
+	// set coinbase as account holding coins
+	rawAccounts := defaultGenesis[auth.ModuleName]
+	var authGenState auth.GenesisState
+	memCodec().MustUnmarshalJSON(rawAccounts, &authGenState)
+	authGenState.Accounts = append(authGenState.Accounts, &auth.BaseAccount{
+		Address:       sdk.Address(pubKey.Address()),
+		Coins:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultStakeDenom, sdk.NewInt(1000000000))),
+		PubKey:        pubKey,
+		AccountNumber: 0,
+		Sequence:      0,
+	})
+	// add second account
+	authGenState.Accounts = append(authGenState.Accounts, &auth.BaseAccount{
+		Address:       sdk.Address(pubKey2.Address()),
+		Coins:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultStakeDenom, sdk.NewInt(1000000000))),
+		PubKey:        pubKey,
+		AccountNumber: 0,
+		Sequence:      0,
+	})
+	res2 := memCodec().MustMarshalJSON(authGenState)
+	defaultGenesis[auth.ModuleName] = res2
+	// set default chain for module
+	rawPocket := defaultGenesis[pocketTypes.ModuleName]
+	var pocketGenesisState pocketTypes.GenesisState
+	memCodec().MustUnmarshalJSON(rawPocket, &pocketGenesisState)
+	pocketGenesisState.Params.SupportedBlockchains = []string{dummyChainsHash}
+	res3 := memCodec().MustMarshalJSON(pocketGenesisState)
+	defaultGenesis[pocketTypes.ModuleName] = res3
+	genState = defaultGenesis
+	j, _ := memCodec().MarshalJSONIndent(defaultGenesis, "", "    ")
+	return j
+}
+
+func twoValTwoNodeGenesisState() []byte {
+	kb := getInMemoryKeybase()
+	kp1, err := kb.GetCoinbase()
+	if err != nil {
+		panic(err)
+	}
+	kp2, err := kb.Create("test")
+	if err != nil {
+		panic(err)
+	}
+	pubKey := kp1.PublicKey
+	pubKey2 := kp2.PublicKey
+	defaultGenesis := module.NewBasicManager(
+		apps.AppModuleBasic{},
+		auth.AppModuleBasic{},
+		bank.AppModuleBasic{},
+		params.AppModuleBasic{},
+		nodes.AppModuleBasic{},
+		supply.AppModuleBasic{},
+		pocket.AppModuleBasic{},
+	).DefaultGenesis()
+	// set coinbase as a validator
+	rawPOS := defaultGenesis[nodesTypes.ModuleName]
+	var posGenesisState nodesTypes.GenesisState
+	memCodec().MustUnmarshalJSON(rawPOS, &posGenesisState)
+	posGenesisState.Validators = append(posGenesisState.Validators,
+		nodesTypes.Validator{Address: sdk.Address(pubKey.Address()),
+			PublicKey:    pubKey,
+			Status:       sdk.Staked,
+			Chains:       []string{dummyChainsHash},
+			ServiceURL:   dummyServiceURL,
+			StakedTokens: sdk.NewInt(1000000000000000)})
+	posGenesisState.Validators = append(posGenesisState.Validators,
+		nodesTypes.Validator{Address: sdk.Address(pubKey2.Address()),
+			PublicKey:    pubKey2,
+			Status:       sdk.Staked,
+			Chains:       []string{dummyChainsHash},
+			ServiceURL:   dummyServiceURL,
+			StakedTokens: sdk.NewInt(1000000000)})
+	posGenesisState.Params.UnstakingTime = time.Nanosecond
+	posGenesisState.Params.SessionBlockFrequency = 5
 	res := memCodec().MustMarshalJSON(posGenesisState)
 	defaultGenesis[nodesTypes.ModuleName] = res
 	// set coinbase as account holding coins

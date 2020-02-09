@@ -190,6 +190,7 @@ func newMemPCApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseA
 	)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 	app.SetInitChainer(app.InitChainer)
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.supplyKeeper))
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.MountKVStores(app.keys)
