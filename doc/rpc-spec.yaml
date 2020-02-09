@@ -1,12 +1,12 @@
 openapi: 3.0.1
 info:
   title: Pocket Network
-  description: This is the API definition Pocket Network core RPC calls.
+  description: This is the API definition Pocket Network core RPC calls. Pocket is a distributed network that relays data requests and responses to and from any blockchain system. Pocket verifies all relayed data and proportionally rewards the participating nodes with native cryptographic tokens.
   termsOfService: https://pokt.network/terms/
   contact:
     email: hola@pokt.network
   license:
-    name: Apache 2.0 License
+    name: MIT License
     url: https://github.com/pokt-network/pocket-core/LICENSE.md
   version: 1.0.0
 externalDocs:
@@ -95,7 +95,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Description of a specific app at a blockheight
+        description: Returns the app at the specified height
         content:
           application/json:
             schema:
@@ -118,7 +118,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Details of application parameters at a specific height
+        description: Returns the app parameters at the specified height
         content:
           application/json:
             schema:
@@ -140,7 +140,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Description of all apps at a blockheight
+        description: Returns the list of all applications known at the specified height
         content:
           application/json:
             schema:
@@ -163,7 +163,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Current balance of the address
+        description: Returns the balance of the specified address at the specified height
         content:
           application/json:
             schema:
@@ -187,7 +187,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Block number to fetch
+        description: Returns the block structure at the specified height
         content:
           application/json:
             schema:
@@ -209,7 +209,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Current block height
+        description: Returns the current height
         content:
           application/json:
             schema:
@@ -231,7 +231,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Details of a specific node
+        description: Returns the node at the specified height
         content:
           application/json:
             schema:
@@ -253,7 +253,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Details of node parameters at a specific height
+        description: Returns the node parameters at the specified height
         content:
           application/json:
             schema:
@@ -275,7 +275,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Node proof from a specific node
+        description: Returns the node proof for specific session
         content:
           application/json:
             schema:
@@ -295,7 +295,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Node proofs from a specific blockchain height
+        description: Returns the list of all Relay Batch proofs submitted by node address at height
         content:
           application/json:
             schema:
@@ -318,7 +318,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Status of the connected nodes
+        description: Returns the list of all nodes known at the specified height
         content:
           application/json:
             schema:
@@ -341,7 +341,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Details of Pocket Network parameters at a specific height
+        description: Returns the pocket parameters at the specified height
         content:
           application/json:
             schema:
@@ -363,7 +363,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Details of Pocket Network parameters at a specific height
+        description: Returns the list of node params specified in the height
         content:
           application/json:
             schema:
@@ -385,7 +385,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Details of Pocket Network parameters at a specific height
+        description: Returns the list Network Identifiers supported by the network at the specified height
         content:
           application/json:
             schema:
@@ -407,7 +407,7 @@ paths:
       tags:
       - query
       requestBody:
-        description: Block number to fetch
+        description: Returns the transaction by the hash
         content:
           application/json:
             schema:
