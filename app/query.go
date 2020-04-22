@@ -178,7 +178,9 @@ func QueryChallenge(c pocketTypes.ChallengeProofInvalidData) (*pocketTypes.Chall
 }
 
 func QueryDispatch(header pocketTypes.SessionHeader) (*pocketTypes.DispatchResponse, error) {
-	return pocket.QueryDispatch(Codec(), getTMClient(), header)
+	client := getTMClient()
+	defer client.Stop()
+	return pocket.QueryDispatch(Codec(), client, header)
 }
 
 func QueryState() (appState json.RawMessage, err error) {
