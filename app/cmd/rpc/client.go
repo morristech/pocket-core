@@ -3,29 +3,32 @@ package rpc
 import (
 	"encoding/hex"
 	"encoding/json"
+	"net/http"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pokt-network/pocket-core/app"
 	"github.com/pokt-network/pocket-core/x/pocketcore/types"
-	"net/http"
 )
 
 func Dispatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !cors(&w, r) {
 		return
 	}
+	var res *types.DispatchResponse
+	var err error
 	d := types.SessionHeader{}
+
 	if err := PopModel(w, r, ps, &d); err != nil {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	res, err := app.QueryDispatch(d)
-	if err != nil {
+	if res, err = app.QueryDispatch(d); err != nil {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	j, er := json.Marshal(res)
-	if er != nil {
-		WriteErrorResponse(w, 400, er.Error())
+	j, err := json.Marshal(res)
+	if err != nil {
+		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
 	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
