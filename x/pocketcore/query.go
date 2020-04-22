@@ -3,6 +3,7 @@ package pocketcore
 import (
 	"errors"
 	"fmt"
+
 	"github.com/pokt-network/pocket-core/x/pocketcore/types"
 	"github.com/pokt-network/posmint/codec"
 	sdk "github.com/pokt-network/posmint/types"
