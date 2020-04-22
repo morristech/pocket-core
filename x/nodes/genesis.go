@@ -2,8 +2,9 @@ package nodes
 
 import (
 	"fmt"
-	"github.com/pokt-network/pocket-core/x/nodes/keeper"
 	"time"
+
+	"github.com/pokt-network/pocket-core/x/nodes/keeper"
 
 	"github.com/pokt-network/pocket-core/x/nodes/types"
 	sdk "github.com/pokt-network/posmint/types"
@@ -132,7 +133,7 @@ func ExportGenesis(ctx sdk.Ctx, keeper keeper.Keeper) types.GenesisState {
 		localMissedBlocks := []types.MissedBlock{}
 
 		keeper.IterateAndExecuteOverMissedArray(ctx, address, func(index int64, missed bool) (stop bool) {
-			localMissedBlocks = append(localMissedBlocks, types.MissedBlock{index, missed})
+			localMissedBlocks = append(localMissedBlocks, types.MissedBlock{Index: index, Missed: missed})
 			return false
 		})
 		missedBlocks[addrstring] = localMissedBlocks

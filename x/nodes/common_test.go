@@ -1,6 +1,9 @@
 package nodes
 
 import (
+	"math/rand"
+	"testing"
+
 	"github.com/pokt-network/pocket-core/x/nodes/keeper"
 	"github.com/pokt-network/pocket-core/x/nodes/types"
 	"github.com/pokt-network/posmint/codec"
@@ -17,8 +20,6 @@ import (
 	"github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-	"math/rand"
-	"testing"
 )
 
 // nolint: deadcode unused
@@ -202,7 +203,7 @@ func getGenesisStateForTest(ctx sdk.Ctx, keeper keeper.Keeper, defaultparams boo
 		localMissedBlocks := []types.MissedBlock{}
 
 		keeper.IterateAndExecuteOverMissedArray(ctx, address, func(index int64, missed bool) (stop bool) {
-			localMissedBlocks = append(localMissedBlocks, types.MissedBlock{index, missed})
+			localMissedBlocks = append(localMissedBlocks, types.MissedBlock{Index: index, Missed: missed})
 			return false
 		})
 		missedBlocks[addrstring] = localMissedBlocks
