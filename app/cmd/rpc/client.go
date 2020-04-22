@@ -35,10 +35,10 @@ func Dispatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func Relay(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var relay = types.Relay{}
 	if !cors(&w, r) {
 		return
 	}
+	var relay = types.Relay{}
 	if err := PopModel(w, r, ps, &relay); err != nil {
 		WriteErrorResponse(w, 400, err.Error())
 		return
@@ -48,9 +48,9 @@ func Relay(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
-	j, er := json.Marshal(res)
-	if er != nil {
-		WriteErrorResponse(w, 400, er.Error())
+	j, err := json.Marshal(res)
+	if err != nil {
+		WriteErrorResponse(w, 400, err.Error())
 		return
 	}
 	WriteJSONResponse(w, string(j), r.URL.Path, r.Host)
