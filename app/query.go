@@ -169,18 +169,25 @@ func QueryPocketParams(height int64) (pocketTypes.Params, error) {
 	return pocket.QueryParams(Codec(), getTMClient(), height)
 }
 
-func QueryRelay(r pocketTypes.Relay) (*pocketTypes.RelayResponse, error) {
-	return pocket.QueryRelay(Codec(), getTMClient(), r)
-}
-
-func QueryChallenge(c pocketTypes.ChallengeProofInvalidData) (*pocketTypes.ChallengeResponse, error) {
-	return pocket.QueryChallenge(Codec(), getTMClient(), c)
-}
-
-func QueryDispatch(header pocketTypes.SessionHeader) (*pocketTypes.DispatchResponse, error) {
+func QueryRelay(r pocketTypes.Relay) (res *pocketTypes.RelayResponse, err error) {
 	client := getTMClient()
 	defer client.Stop()
-	return pocket.QueryDispatch(Codec(), client, header)
+	res, err = pocket.QueryRelay(Codec(), client, r)
+	return
+}
+
+func QueryChallenge(c pocketTypes.ChallengeProofInvalidData) (res *pocketTypes.ChallengeResponse, err error) {
+	client := getTMClient()
+	defer client.Stop()
+	res, err = pocket.QueryChallenge(Codec(), client, c)
+	return
+}
+
+func QueryDispatch(header pocketTypes.SessionHeader) (res *pocketTypes.DispatchResponse, err error) {
+	client := getTMClient()
+	defer client.Stop()
+	res, err = pocket.QueryDispatch(Codec(), client, header)
+	return
 }
 
 func QueryState() (appState json.RawMessage, err error) {
