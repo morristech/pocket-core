@@ -49,13 +49,13 @@ func (k Keeper) HandleRelay(ctx sdk.Ctx, relay pc.Relay) (*pc.RelayResponse, sdk
 	// get the private key from the private validator file
 	pk, er := k.GetPKFromFile(ctx)
 	if er != nil {
-		ctx.Logger().Error(fmt.Errorf("could not get PK to Sign response for address: %v with hash: %v \n", selfNode.GetAddress().String(), resp.Hash()).Error())
+		ctx.Logger().Error(fmt.Errorf("could not get PK to Sign response for address: %v with hash: %v", selfNode.GetAddress().String(), resp.Hash()).Error())
 		return nil, pc.NewKeybaseError(pc.ModuleName, er)
 	}
 	// sign the response
 	sig, er := pk.Sign(resp.Hash())
 	if er != nil {
-		ctx.Logger().Error(fmt.Errorf("could not sign response for address: %v with hash: %v \n", selfNode.GetAddress().String(), resp.Hash()).Error())
+		ctx.Logger().Error(fmt.Errorf("could not sign response for address: %v with hash: %v", selfNode.GetAddress().String(), resp.Hash()).Error())
 		return nil, pc.NewKeybaseError(pc.ModuleName, er)
 	}
 	// attach the signature in hex to the response
