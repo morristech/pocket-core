@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
+
 	pc "github.com/pokt-network/pocket-core/x/pocketcore/types"
 	sdk "github.com/pokt-network/posmint/types"
 )
@@ -11,8 +12,6 @@ import (
 func (k Keeper) HandleRelay(ctx sdk.Ctx, relay pc.Relay) (*pc.RelayResponse, sdk.Error) {
 	// get the latest session block height because this relay will correspond with the latest session
 	sessionBlockHeight := k.GetLatestSessionBlockHeight(ctx)
-	// retrieve all service nodes available from world state to do session generation (the session data is needed to service)
-	allNodes := k.GetAllNodes(ctx)
 	// get self node (your validator) from the current state
 	selfNode, err := k.GetSelfNode(ctx)
 	if err != nil {
@@ -32,7 +31,7 @@ func (k Keeper) HandleRelay(ctx sdk.Ctx, relay pc.Relay) (*pc.RelayResponse, sdk
 	}
 	// ensure the validity of the relay
 	if err := relay.Validate(ctx, k.posKeeper, selfNode, hostedBlockchains, sessionBlockHeight, int(k.SessionNodeCount(sessionCtx)), app); err != nil {
-		ctx.Logger().Error(fmt.Errorf("could not validate relay for %v, %v, %v %v, %v, %v \n", selfNode, hostedBlockchains, sessionBlockHeight, int(k.SessionNodeCount(sessionCtx)), allNodes, app).Error())
+		ctx.Logger().Error(fmt.Errorf("could not validate relay for %v, %v, %v %v, %v", selfNode, hostedBlockchains, sessionBlockHeight, int(k.SessionNodeCount(sessionCtx)), app).Error())
 		return nil, err
 	}
 	// store the proof before execution, because the proof corresponds to the previous relay
