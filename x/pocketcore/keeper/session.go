@@ -12,21 +12,19 @@ func (k Keeper) HandleDispatch(ctx sdk.Ctx, header types.SessionHeader) (*types.
 	// set the session block height
 	header.SessionBlockHeight = latestSessionBlockHeight
 	// validate the header
-	err := header.ValidateHeader()
-	if err != nil {
+	if err := header.ValidateHeader(); err != nil {
 		return nil, err
 	}
 	// get the session context
-	sessionCtx, er := ctx.PrevCtx(latestSessionBlockHeight)
-	if er != nil {
-		return nil, sdk.ErrInternal(er.Error())
+	sessionCtx, err := ctx.PrevCtx(latestSessionBlockHeight)
+	if err != nil {
+		return nil, sdk.ErrInternal(err.Error())
 	}
 	// check cache
 	session, found := types.GetSession(header)
 	// if not found generate the session
 	if !found {
-		var err sdk.Error
-		session, err = types.NewSession(sessionCtx, ctx, k.posKeeper, header, types.BlockHash(sessionCtx), int(k.SessionNodeCount(sessionCtx)))
+		session, err := types.NewSession(sessionCtx, ctx, k.posKeeper, header, types.BlockHash(sessionCtx), int(k.SessionNodeCount(sessionCtx)))
 		if err != nil {
 			return nil, err
 		}
