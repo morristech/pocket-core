@@ -90,7 +90,8 @@ func TestAllEvidence_DeleteEvidence(t *testing.T) {
 	SetProof(header, RelayEvidence, proof)
 	assert.True(t, reflect.DeepEqual(GetProof(header, RelayEvidence, 0), proof))
 	GetProof(header, RelayEvidence, 0)
-	DeleteEvidence(header, RelayEvidence)
+	er := DeleteEvidence(header, RelayEvidence)
+	assert.Nil(t, er)
 	assert.Empty(t, GetProof(header, RelayEvidence, 0))
 }
 
