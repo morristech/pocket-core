@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"reflect"
 
-	"github.com/wealdtech/go-merkletree/blake2b"
+	"golang.org/x/crypto/blake2b"
 )
 
 // "HashSum" - A structure to represent the hash and the sum at an index in the merkle sum index tree
@@ -140,7 +140,8 @@ func sortAndStructure(relayProofs []Proof) (d []HashSum, sortedProofs []Proof) {
 			Sum:  uint64(math.MaxUint32),
 		}
 	}
-	relayProofs = append(relayProofs, make([]Proof, int(properLength)-numberOfProofs)...)
+	proofs := make([]Proof, int(properLength)-numberOfProofs)
+	relayProofs = append(relayProofs, proofs...)
 	// sort the slice based on the numerical value of the tHash data
 	data, relayProofs = quickSort(data, relayProofs)
 	return data, relayProofs[:numberOfProofs]
@@ -278,7 +279,8 @@ func nextPowerOfTwo(v uint) uint {
 
 // "hash" - the hash function used in the merkle tree
 func hash(data []byte) []byte {
-	return blake2b.New().Hash(data)
+	hash := blake2b.Sum256((data))
+	return hash[:]
 }
 
 // "parentHash" - Compute the hash of the parent by hashing the hashes, sum and parent
