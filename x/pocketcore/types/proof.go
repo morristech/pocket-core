@@ -33,6 +33,15 @@ type RelayProof struct {
 	Token              AAT    `json:"aat"`                  // the app auth token object
 	Signature          string `json:"signature"`            // the signature in hex
 }
+type relayProof struct {
+	Entropy            int64  `json:"entropy"`
+	SessionBlockHeight int64  `json:"session_block_height"`
+	ServicerPubKey     string `json:"servicer_pub_key"`
+	Blockchain         string `json:"blockchain"`
+	Signature          string `json:"signature"`
+	Token              string `json:"token"`
+	RequestHash        string `json:"request_hash"`
+}
 
 // "ValidateLocal" - Validates the proof object, where the owner of the proof is the local node
 func (rp RelayProof) ValidateLocal(appSupportedBlockchains []string, sessionNodeCount int, sessionBlockHeight int64, verifyPubKey string) sdk.Error {

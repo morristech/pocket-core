@@ -3,10 +3,11 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/wealdtech/go-merkletree/blake2b"
 	"math"
 	"math/rand"
 	"reflect"
+
+	"github.com/wealdtech/go-merkletree/blake2b"
 )
 
 // "HashSum" - A structure to represent the hash and the sum at an index in the merkle sum index tree
@@ -298,6 +299,7 @@ func uint64ToBytes(a uint64) (bz []byte) {
 }
 
 // "quickSort" - Sort the hash sum and the proofs by hash sum
+// CONTRACT hash sum and proofs must be the same length
 func quickSort(hs []HashSum, p []Proof) ([]HashSum, []Proof) {
 	// get the length of the hash sums
 	hsLen := len(hs)
