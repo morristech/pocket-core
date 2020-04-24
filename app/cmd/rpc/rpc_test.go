@@ -231,8 +231,8 @@ func TestRPC_QueryAccount(t *testing.T) {
 	_, _, cleanup := NewInMemoryTendermintNode(t, oneValTwoNodeGenesisState())
 	_, stopCli, evtChan := subscribeTo(t, tmTypes.EventNewBlock)
 	type Coins struct {
-		denom  string `json:"denom"`
-		amount int    `json:"amount"`
+		denom  string
+		amount int
 	}
 	select {
 	case <-evtChan:

@@ -5,14 +5,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	appexported "github.com/pokt-network/pocket-core/x/apps/exported"
-	nodeexported "github.com/pokt-network/pocket-core/x/nodes/exported"
-	"github.com/pokt-network/posmint/crypto"
-	sdk "github.com/pokt-network/posmint/types"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"strings"
+
+	appexported "github.com/pokt-network/pocket-core/x/apps/exported"
+	nodeexported "github.com/pokt-network/pocket-core/x/nodes/exported"
+	"github.com/pokt-network/posmint/crypto"
+	sdk "github.com/pokt-network/posmint/types"
 )
 
 const DEFAULTHTTPMETHOD = "POST"
@@ -281,10 +282,10 @@ func executeHTTPRequest(payload string, url string, method string, headers map[s
 	}
 	// execute the request
 	resp, err := (&http.Client{}).Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	// ensure code is 200
 	if resp.StatusCode != 200 {
 		return "", NewHTTPStatusCodeError(ModuleName, resp.StatusCode)

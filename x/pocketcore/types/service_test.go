@@ -2,15 +2,16 @@ package types
 
 import (
 	"encoding/hex"
+	"reflect"
+	"testing"
+	"time"
+
 	appsType "github.com/pokt-network/pocket-core/x/apps/types"
 	"github.com/pokt-network/pocket-core/x/nodes/exported"
 	nodesTypes "github.com/pokt-network/pocket-core/x/nodes/types"
 	sdk "github.com/pokt-network/posmint/types"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
-	"reflect"
-	"testing"
-	"time"
 )
 
 func TestRelay_Validate(t *testing.T) { // TODO add overservice, and not unique relay here
@@ -147,7 +148,7 @@ func TestRelay_Validate(t *testing.T) { // TODO add overservice, and not unique 
 		node     nodesTypes.Validator
 		app      appsType.Application
 		allNodes []exported.ValidatorI
-		hb       HostedBlockchains
+		hb       *HostedBlockchains
 		hasError bool
 	}{
 		{
@@ -156,7 +157,7 @@ func TestRelay_Validate(t *testing.T) { // TODO add overservice, and not unique 
 			node:     selfNode,
 			app:      app,
 			allNodes: allNodes,
-			hb:       hb,
+			hb:       &hb,
 			hasError: false,
 		},
 		{
@@ -165,7 +166,7 @@ func TestRelay_Validate(t *testing.T) { // TODO add overservice, and not unique 
 			node:     selfNode,
 			app:      app,
 			allNodes: allNodes,
-			hb:       hb,
+			hb:       &hb,
 			hasError: true,
 		},
 		{
@@ -174,7 +175,7 @@ func TestRelay_Validate(t *testing.T) { // TODO add overservice, and not unique 
 			node:     selfNode,
 			app:      app,
 			allNodes: allNodes,
-			hb:       hbNotSupported,
+			hb:       &hbNotSupported,
 			hasError: true,
 		},
 		{
@@ -183,7 +184,7 @@ func TestRelay_Validate(t *testing.T) { // TODO add overservice, and not unique 
 			node:     selfNode,
 			app:      app,
 			allNodes: noEthereumNodes,
-			hb:       hb,
+			hb:       &hb,
 			hasError: true,
 		},
 	}
@@ -192,7 +193,7 @@ func TestRelay_Validate(t *testing.T) { // TODO add overservice, and not unique 
 
 			k := MockPosKeeper{Validators: tt.allNodes}
 			assert.Equal(t, tt.relay.Validate(newContext(t, false).WithAppVersion("0.0.0"), k, tt.node,
-				&tt.hb, 1, 5, tt.app) != nil, tt.hasError)
+				tt.hb, 1, 5, tt.app) != nil, tt.hasError)
 		})
 		ClearSessionCache()
 	}

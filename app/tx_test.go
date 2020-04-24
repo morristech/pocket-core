@@ -211,7 +211,7 @@ func TestDuplicateTxWithRawTx(t *testing.T) {
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultStakeDenom, sdk.NewInt(100000)))))
 	assert.Nil(t, err)
 	// create the transaction
-	txBz2, err := types.DefaultTxEncoder(memCodec())(types.NewTestTx(sdk.Context{}.WithChainID("pocket-test"),
+	_, err = types.DefaultTxEncoder(memCodec())(types.NewTestTx(sdk.Context{}.WithChainID("pocket-test"),
 		[]sdk.Msg{types2.MsgSend{
 			FromAddress: cb.GetAddress(),
 			ToAddress:   kp.GetAddress(),
@@ -220,7 +220,6 @@ func TestDuplicateTxWithRawTx(t *testing.T) {
 		[]crypto.PrivateKey{pk},
 		common.RandInt64(),
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultStakeDenom, sdk.NewInt(100000)))))
-	txBz2 = txBz2
 	assert.Nil(t, err)
 	select {
 	case <-evtChan:
