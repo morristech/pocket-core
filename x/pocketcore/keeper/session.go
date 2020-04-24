@@ -24,7 +24,8 @@ func (k Keeper) HandleDispatch(ctx sdk.Ctx, header types.SessionHeader) (*types.
 	session, found := types.GetSession(header)
 	// if not found generate the session
 	if !found {
-		session, err := types.NewSession(sessionCtx, ctx, k.posKeeper, header, types.BlockHash(sessionCtx), int(k.SessionNodeCount(sessionCtx)))
+		var err sdk.Error
+		session, err = types.NewSession(sessionCtx, ctx, k.posKeeper, header, types.BlockHash(sessionCtx), int(k.SessionNodeCount(sessionCtx)))
 		if err != nil {
 			return nil, err
 		}
