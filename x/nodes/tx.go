@@ -77,12 +77,15 @@ func newTx(cdc *codec.Codec, msg sdk.Msg, fromAddr sdk.Address, tmNode client.Cl
 	if err != nil {
 		panic(err)
 	}
+	// Retrieve chain ID
 	chainID := genDoc.Genesis.ChainID
 
+	// retrieve key pair for account
 	kp, err := keybase.Get(fromAddr)
 	if err != nil {
 		panic(err)
 	}
+	// retrieve private key from keypair
 	privkey, err := mintkey.UnarmorDecryptPrivKey(kp.PrivKeyArmor, passphrase)
 	if err != nil {
 		panic(err)
@@ -90,10 +93,8 @@ func newTx(cdc *codec.Codec, msg sdk.Msg, fromAddr sdk.Address, tmNode client.Cl
 	cliCtx = util.NewCLIContext(tmNode, fromAddr, passphrase).WithCodec(cdc)
 	cliCtx.BroadcastMode = util.BroadcastSync
 	cliCtx.PrivateKey = privkey
-	err = cliCtx.EnsureExists(fromAddr)
-	if err != nil {
-		panic(err)
-	}
+
+	// retrieve from address
 	account, err := cliCtx.GetAccount(fromAddr)
 	if err != nil {
 		panic(err)
@@ -102,6 +103,7 @@ func newTx(cdc *codec.Codec, msg sdk.Msg, fromAddr sdk.Address, tmNode client.Cl
 	if account.GetCoins().AmountOf(sdk.DefaultStakeDenom).LTE(fee) { // todo get stake denom
 		panic(fmt.Sprintf("insufficient funds: the fee needed is %v", fee))
 	}
+	// Build tx for current ChainID
 	txBuilder = auth.NewTxBuilder(
 		auth.DefaultTxEncoder(cdc),
 		auth.DefaultTxDecoder(cdc),
