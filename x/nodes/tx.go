@@ -94,7 +94,7 @@ func newTx(cdc *codec.Codec, msg sdk.Msg, fromAddr sdk.Address, tmNode client.Cl
 	cliCtx.BroadcastMode = util.BroadcastSync
 	cliCtx.PrivateKey = privkey
 
-	// retrieve from address
+	// retrieve account from address
 	account, err := cliCtx.GetAccount(fromAddr)
 	if err != nil {
 		panic(err)
