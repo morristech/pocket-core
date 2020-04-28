@@ -2,6 +2,7 @@ package nodes
 
 import (
 	"fmt"
+
 	"github.com/pokt-network/pocket-core/x/nodes/keeper"
 	"github.com/pokt-network/pocket-core/x/nodes/types"
 	sdk "github.com/pokt-network/posmint/types"
@@ -89,10 +90,12 @@ func handleMsgBeginUnstake(ctx sdk.Ctx, msg types.MsgBeginUnstake, k keeper.Keep
 // having been jailed (and thus unstaked) for downtime
 func handleMsgUnjail(ctx sdk.Ctx, msg types.MsgUnjail, k keeper.Keeper) sdk.Result {
 	ctx.Logger().Info("Unjail Message received from " + msg.ValidatorAddr.String())
+	// check msg
 	addr, err := k.ValidateUnjailMessage(ctx, msg)
 	if err != nil {
 		return err.Result()
 	}
+	// remove validator from jail
 	k.UnjailValidator(ctx, addr)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

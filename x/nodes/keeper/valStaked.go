@@ -6,19 +6,19 @@ import (
 	sdk "github.com/pokt-network/posmint/types"
 )
 
-// set staked validator
+// SetStakedValidator - Store staked validator
 func (k Keeper) SetStakedValidator(ctx sdk.Ctx, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeyForValidatorInStakingSet(validator), validator.Address)
 }
 
-// delete validator from staked set
+// deleteValdiatorFromStakingSet - Remove validator from staked set
 func (k Keeper) deleteValidatorFromStakingSet(ctx sdk.Ctx, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.KeyForValidatorInStakingSet(validator))
 }
 
-// Update the staked tokens of an existing validator, update the validators power index key
+// removeValdiatorTokens - Update the staked tokens of an existing validator, update the validators power index key
 func (k Keeper) removeValidatorTokens(ctx sdk.Ctx, v types.Validator, tokensToRemove sdk.Int) types.Validator {
 	k.deleteValidatorFromStakingSet(ctx, v)
 	v = v.RemoveStakedTokens(tokensToRemove)
@@ -27,7 +27,7 @@ func (k Keeper) removeValidatorTokens(ctx sdk.Ctx, v types.Validator, tokensToRe
 	return v
 }
 
-// get the current staked validators sorted by power-rank
+// getStakedValidators - Retrieve the current staked validators sorted by power-rank
 func (k Keeper) getStakedValidators(ctx sdk.Ctx) types.Validators {
 	validators := make([]types.Validator, 0)
 	iterator := k.stakedValsIterator(ctx)
@@ -44,13 +44,13 @@ func (k Keeper) getStakedValidators(ctx sdk.Ctx) types.Validators {
 	return validators
 }
 
-// returns an iterator for the current staked validators
+// stakedValsIterator - Retrieve an iterator for the current staked validators
 func (k Keeper) stakedValsIterator(ctx sdk.Ctx) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStoreReversePrefixIterator(store, types.StakedValidatorsKey)
 }
 
-// iterate through the staked validator set and perform the provided function
+// IterateAndExecuteOverStakedVals - Goes through the staked validator set and execute handler
 func (k Keeper) IterateAndExecuteOverStakedVals(
 	ctx sdk.Ctx, fn func(index int64, validator exported.ValidatorI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)

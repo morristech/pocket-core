@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"fmt"
-	sdk "github.com/pokt-network/posmint/types"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	sdk "github.com/pokt-network/posmint/types"
+	"github.com/stretchr/testify/assert"
 )
 
 type args struct {
@@ -120,7 +121,7 @@ func TestGetProposerAllocation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			context, _, keeper := createTestInput(t, true)
-			percentage := keeper.getProposerAllocaiton(context)
+			percentage := keeper.getProposerAllocation(context)
 			assert.True(t, test.expectedPercentage.Equal(percentage), "percentages do not match")
 		})
 	}
