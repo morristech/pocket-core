@@ -2,6 +2,7 @@ package pos
 
 import (
 	"fmt"
+
 	"github.com/pokt-network/pocket-core/x/apps/keeper"
 	"github.com/pokt-network/pocket-core/x/apps/types"
 	sdk "github.com/pokt-network/posmint/types"
@@ -70,12 +71,10 @@ func handleMsgBeginUnstake(ctx sdk.Ctx, msg types.MsgBeginAppUnstake, k keeper.K
 		ctx.Logger().Error("App Not Found " + msg.Address.String())
 		return types.ErrNoApplicationFound(k.Codespace()).Result()
 	}
-	ctx.Logger().Info("Validate Unstaking App " + msg.Address.String())
 	if err := k.ValidateApplicationBeginUnstaking(ctx, application); err != nil {
 		ctx.Logger().Error("App Unstake Validation Not Successful " + msg.Address.String())
 		return err.Result()
 	}
-	ctx.Logger().Info("Starting to Unstake App " + msg.Address.String())
 	k.BeginUnstakingApplication(ctx, application)
 	// create the event
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -96,6 +95,8 @@ func handleMsgBeginUnstake(ctx sdk.Ctx, msg types.MsgBeginAppUnstake, k keeper.K
 // Applications must submit a transaction to unjail itself after todo
 // having been jailed (and thus unstaked) for downtime
 func handleMsgUnjail(ctx sdk.Ctx, msg types.MsgAppUnjail, k keeper.Keeper) sdk.Result {
+	ctx.Logger().Info("Unjail Message received from " + msg.AppAddr.String())
+	// check msg
 	consAddr, err := k.ValidateUnjailMessage(ctx, msg)
 	if err != nil {
 		return err.Result()

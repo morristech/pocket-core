@@ -34,7 +34,8 @@ func (k Keeper) BurnForChallenge(ctx sdk.Ctx, challenges sdk.Int, address sdk.Ad
 	k.BurnValidator(ctx, val.Address, coins)
 }
 
-// simpleSlash -  Slash validator for amount
+// simpleSlash - Slash validator for an infraction committed at a known height
+// Find the contributing stake at that height and burn the specified slashFactor
 func (k Keeper) simpleSlash(ctx sdk.Ctx, addr sdk.Address, amount sdk.Int) {
 	// error check slash
 	validator := k.validateSimpleSlash(ctx, addr, amount)

@@ -217,7 +217,7 @@ func (k Keeper) BeginUnstakingValidator(ctx sdk.Ctx, validator types.Validator) 
 	ctx.Logger().Info("Began unstaking validator " + validator.Address.String())
 }
 
-// ValidateValidatorFinishUnstaking - Check if validator can finnish unstaking
+// ValidateValidatorFinishUnstaking - Check if validator can finish unstaking
 func (k Keeper) ValidateValidatorFinishUnstaking(ctx sdk.Ctx, validator types.Validator) sdk.Error {
 	if !validator.IsUnstaking() {
 		return types.ErrValidatorStatus(k.codespace)

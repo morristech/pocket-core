@@ -62,6 +62,7 @@ func handleMsgBeginUnstake(ctx sdk.Ctx, msg types.MsgBeginUnstake, k keeper.Keep
 	// the validator account and global shares are updated within here
 	validator, found := k.GetValidator(ctx, msg.Address)
 	if !found {
+		ctx.Logger().Error("Validator Not Found " + msg.Address.String())
 		return types.ErrNoValidatorFound(k.Codespace()).Result()
 	}
 	if err := k.ValidateValidatorBeginUnstaking(ctx, validator); err != nil {

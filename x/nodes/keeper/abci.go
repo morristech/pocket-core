@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/pokt-network/posmint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-// BeginBlocker - Called at the beggingng of every block
+// BeginBlocker - Called at the beggining of every block
 // 1) allocate tokens to block producer
 // 2) mint any custom awards for each validator
 // 3) set new proposer
