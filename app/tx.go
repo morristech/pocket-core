@@ -112,7 +112,10 @@ func StakeApp(chains []string, fromAddr, passphrase string, amount sdk.Int) (*sd
 	if amount.LTE(sdk.NewInt(0)) {
 		return nil, sdk.ErrInternal("must stake above zero")
 	}
-	return apps.StakeTx(Codec(), getTMClient(), MustGetKeybase(), chains, amount, kp, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := apps.StakeTx(Codec(), tmClient, MustGetKeybase(), chains, amount, kp, passphrase)
+	return res, err
 }
 
 func UnstakeApp(fromAddr, passphrase string) (*sdk.TxResponse, error) {
@@ -120,7 +123,10 @@ func UnstakeApp(fromAddr, passphrase string) (*sdk.TxResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return apps.UnstakeTx(Codec(), getTMClient(), MustGetKeybase(), fa, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := apps.UnstakeTx(Codec(), tmClient, MustGetKeybase(), fa, passphrase)
+	return res, err
 }
 
 func DAOTx(fromAddr, toAddr, passphrase string, amount sdk.Int, action string) (*sdk.TxResponse, error) {
@@ -132,7 +138,10 @@ func DAOTx(fromAddr, toAddr, passphrase string, amount sdk.Int, action string) (
 	if err != nil {
 		return nil, err
 	}
-	return gov.DAOTransferTx(Codec(), getTMClient(), MustGetKeybase(), fa, ta, amount, action, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := gov.DAOTransferTx(Codec(), tmClient, MustGetKeybase(), fa, ta, amount, action, passphrase)
+	return res, err
 }
 
 func ChangeParam(fromAddr, paramACLKey string, paramValue interface{}, passphrase string) (*sdk.TxResponse, error) {
@@ -140,7 +149,10 @@ func ChangeParam(fromAddr, paramACLKey string, paramValue interface{}, passphras
 	if err != nil {
 		return nil, err
 	}
-	return gov.ChangeParamsTx(Codec(), getTMClient(), MustGetKeybase(), fa, paramACLKey, paramValue, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := gov.ChangeParamsTx(Codec(), tmClient, MustGetKeybase(), fa, paramACLKey, paramValue, passphrase)
+	return res, err
 }
 
 func Upgrade(fromAddr string, upgrade types.Upgrade, passphrase string) (*sdk.TxResponse, error) {
@@ -148,5 +160,8 @@ func Upgrade(fromAddr string, upgrade types.Upgrade, passphrase string) (*sdk.Tx
 	if err != nil {
 		return nil, err
 	}
-	return gov.UpgradeTx(Codec(), getTMClient(), MustGetKeybase(), fa, upgrade, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := gov.UpgradeTx(Codec(), getTMClient(), MustGetKeybase(), fa, upgrade, passphrase)
+	return res, err
 }
