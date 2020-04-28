@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/posmint/x/gov/types"
 )
 
+// SendTransaction - Deliver Transaction to node
 func SendTransaction(fromAddr, toAddr, passphrase string, amount sdk.Int) (*sdk.TxResponse, error) {
 	fa, err := sdk.AddressFromHex(fromAddr)
 	if err != nil {
@@ -22,18 +23,26 @@ func SendTransaction(fromAddr, toAddr, passphrase string, amount sdk.Int) (*sdk.
 	if amount.LTE(sdk.ZeroInt()) {
 		return nil, sdk.ErrInternal("must send above 0")
 	}
-	return nodes.Send(Codec(), getTMClient(), MustGetKeybase(), fa, ta, passphrase, amount)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := nodes.Send(Codec(), tmClient, MustGetKeybase(), fa, ta, passphrase, amount)
+	return res, err
 }
 
+// SendRawTx - Deliver tx bytes to node
 func SendRawTx(fromAddr string, txBytes []byte) (sdk.TxResponse, error) {
 	fa, err := sdk.AddressFromHex(fromAddr)
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}
-	return nodes.RawTx(Codec(), getTMClient(), fa, txBytes)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := nodes.RawTx(Codec(), tmClient, fa, txBytes)
+	return res, err
 }
 
-func StakeNode(chains []string, serviceUrl, fromAddr, passphrase string, amount sdk.Int) (*sdk.TxResponse, error) {
+// StakeNode - Deliver Stake message to node
+func StakeNode(chains []string, serviceURL, fromAddr, passphrase string, amount sdk.Int) (*sdk.TxResponse, error) {
 	fa, err := sdk.AddressFromHex(fromAddr)
 	if err != nil {
 		return nil, err
@@ -51,27 +60,38 @@ func StakeNode(chains []string, serviceUrl, fromAddr, passphrase string, amount 
 	if amount.LTE(sdk.NewInt(0)) {
 		return nil, sdk.ErrInternal("must stake above zero")
 	}
-	err = nodesTypes.ValidateServiceURL(serviceUrl)
+	err = nodesTypes.ValidateServiceURL(serviceURL)
 	if err != nil {
 		return nil, err
 	}
-	return nodes.StakeTx(Codec(), getTMClient(), MustGetKeybase(), chains, serviceUrl, amount, kp, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := nodes.StakeTx(Codec(), tmClient, MustGetKeybase(), chains, serviceURL, amount, kp, passphrase)
+	return res, err
 }
 
+// UnstakeNode - start unstaking message to node
 func UnstakeNode(fromAddr, passphrase string) (*sdk.TxResponse, error) {
 	fa, err := sdk.AddressFromHex(fromAddr)
 	if err != nil {
 		return nil, err
 	}
-	return nodes.UnstakeTx(Codec(), getTMClient(), MustGetKeybase(), fa, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := nodes.UnstakeTx(Codec(), tmClient, MustGetKeybase(), fa, passphrase)
+	return res, err
 }
 
+// UnjailNode - Remove node from jail
 func UnjailNode(fromAddr, passphrase string) (*sdk.TxResponse, error) {
 	fa, err := sdk.AddressFromHex(fromAddr)
 	if err != nil {
 		return nil, err
 	}
-	return nodes.UnjailTx(Codec(), getTMClient(), MustGetKeybase(), fa, passphrase)
+	tmClient := getTMClient()
+	defer tmClient.Stop()
+	res, err := nodes.UnjailTx(Codec(), tmClient, MustGetKeybase(), fa, passphrase)
+	return res, err
 }
 
 func StakeApp(chains []string, fromAddr, passphrase string, amount sdk.Int) (*sdk.TxResponse, error) {
